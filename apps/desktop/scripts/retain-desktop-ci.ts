@@ -33,7 +33,10 @@ export function desktopReleasesRoot(env: NodeJS.ProcessEnv): string {
  * @returns Retained directory, including explicitly qualified debugging packages.
  */
 export async function retainDesktopCi(env: NodeJS.ProcessEnv, appRoot = resolve(import.meta.dirname, '..')): Promise<string> {
-  const target = resolveDesktopBuildTarget(env)
+  const buildTarget = resolveDesktopBuildTarget(env)
+  // Release retention covers signed macOS and Windows CI artifacts; Linux builds are local only.
+  if (buildTarget === 'linux-x64' || buildTarget === 'linux-arm64') throw new Error('desktop retention: Linux targets are not retained')
+  const target = buildTarget
   const windows = target === 'win-x64'
   const platform = windows ? 'win32' : 'darwin'
   const settings = loadDesktopPackageEnvironment(platform, env, appRoot, { unsigned: true })
