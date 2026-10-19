@@ -25,6 +25,13 @@ kind: "package-reference"
 <a id="use-this-package"></a>
 ## 使用本包
 
+<a id="current-repository-reads"></a>
+### 当前仓库读取
+
+`ctx.workspaceProject.read(cwd, signal)` 返回当前 HEAD 与工作区之间的增删行数和改动路径，包含暂存、未暂存及未被忽略的未跟踪文件。`diff(cwd, path, signal)` 在读取指定文件前重新检查受限列表；不在列表中的路径返回 undefined。即使仓库根目录位于上级，路径仍相对于传入的 Session 目录。尚无提交的分支与空树比较，分离 HEAD 使用缩短的提交标识。查询不将改动归因于某轮执行，也不写入仓库索引、对象库、工作区或引用。Git 不可用和非仓库目录返回明确的不可用状态；命令失败或列表被截断时拒绝查询。已有的 `maxFiles`、`outputMaxBytes` 和 `maxFileBytes` 分别限制列表、Git 输出和补丁；`timeoutMs` 同时限制整个项目查询及每条 Git 命令。过大补丁返回 `oversized`，不返回部分文本。插件卸载会取消并等待执行中的查询结束。
+
+### 按轮次记录
+
 正式提供的 Web bundle 挂载本插件。任何具备 `subprocess` 能力且 Host 上有 git 可执行文件的组合都可以挂载它：
 
 ```yaml

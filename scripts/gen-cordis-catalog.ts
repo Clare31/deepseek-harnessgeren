@@ -147,6 +147,7 @@ export const SERVICE_PAGE: Record<string, string> = {
   workspaceController: 'workspace.md',
   workspaceFiles: 'workspace.md',
   workspaceChanges: 'deliverables.md',
+  workspaceProject: 'deliverables.md',
   terminalController: 'workspace.md',
   directoryPickerController: 'workspace.md',
 }
@@ -299,6 +300,7 @@ export const LINK_MAP: Readonly<Record<string, string>> = {
   ProductTelemetryRecord: 'product-telemetry.md',
   ProductTelemetryScalar: 'product-telemetry.md',
   WorkspaceChangesSummary: 'deliverables.md',
+  WorkspaceProject: 'deliverables.md',
   WorkspaceFileDiff: 'deliverables.md',
   Reload: 'boot.md',
   ProfileReconciliation: 'boot.md',

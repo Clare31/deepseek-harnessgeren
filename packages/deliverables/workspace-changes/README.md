@@ -25,6 +25,13 @@ This plugin summarizes which files each top-level turn changed, with per-file li
 <a id="use-this-package"></a>
 ## Use this package
 
+<a id="current-repository-reads"></a>
+### Current repository reads
+
+`ctx.workspaceProject.read(cwd, signal)` returns current HEAD-to-worktree line counts and changed paths, including staged, unstaged, and non-ignored untracked files. `diff(cwd, path, signal)` rechecks the bounded listing before reading one exact path; an unlisted path returns undefined. Paths are relative to the supplied Session directory even when the repository root is above it. Unborn branches compare with an empty tree, and detached HEAD uses an abbreviated commit label. These queries do not attribute edits to a turn and write nothing to the repository's index, object store, worktree, or refs. Missing Git and a non-repository directory return explicit unavailable states; command failures and truncated listings reject. Existing `maxFiles`, `outputMaxBytes`, and `maxFileBytes` bound the list, Git output, and patch. `timeoutMs` bounds each whole project query as well as individual Git commands. Large patches return `oversized` instead of partial text. Plugin teardown cancels and awaits in-flight queries.
+
+### Per-turn recordings
+
 The shipped Web bundle mounts this plugin. Mount it in any composition with the `subprocess` capability and a git executable on the Host:
 
 ```yaml

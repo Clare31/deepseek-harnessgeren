@@ -9,7 +9,8 @@
     "src/client",
     "src/changes.ts",
     "src/presented.ts",
-    "src/css-modules.d.ts"
+    "src/css-modules.d.ts",
+    "src/project.ts"
   ],
   "references": [
     {
@@ -68,6 +69,12 @@
     },
     {
       "path": "../../util/workspace-path"
+    },
+    {
+      "path": "../../attachment/attachment"
+    },
+    {
+      "path": "../resources"
     }
   ]
 }

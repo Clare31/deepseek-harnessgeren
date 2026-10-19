@@ -3908,6 +3908,25 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     ],
   },
   {
+    key: 'workspaceProject',
+    summary: 'Read-only current-worktree queries; unrelated to per-turn attribution.',
+    description: 'Read-only current-worktree queries; unrelated to per-turn attribution.',
+    methods: [
+      {
+        signature: 'read(cwd: string, signal: AbortSignal): Promise<WorkspaceProject>',
+        description: 'Inspect the repository containing a Session directory.',
+        parameters: [{ name: 'cwd', description: 'Session working directory.' }, { name: 'signal', description: 'caller cancellation.' }],
+        returns: 'current repository differences or an explicit unavailable state; failures reject.',
+      },
+      {
+        signature: 'diff(cwd: string, path: string, signal: AbortSignal): Promise<WorkspaceFileDiff | undefined>',
+        description: 'Compare an exact listed file against HEAD.',
+        parameters: [{ name: 'cwd', description: 'Session working directory.' }, { name: 'path', description: 'Session-relative path from read().' }, { name: 'signal', description: 'caller cancellation.' }],
+        returns: 'the comparison, or undefined if the path is no longer listed; failures reject.',
+      },
+    ],
+  },
+  {
     key: 'workspaceRegistry',
     summary: 'Durable workspace registry.',
     description: 'Durable workspace registry. Startup waits for `sessionPersistence`, builds one canonical-cwd header index, and completes the one-time history bootstrap before the service becomes active. The persistence dependency is mandatory so an unavailable peer can never be mistaken for an empty history and commit the initialized marker.',
@@ -8848,6 +8867,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'WorkspacePinValue',
     declaration: 'export interface WorkspacePinValue {\n    readonly pinnedSessionIds: readonly SessionId[];\n}',
+  },
+  {
+    name: 'WorkspaceProject',
+    declaration: 'export type WorkspaceProject = {\n    kind: \'unavailable\';\n    reason: \'git-missing\' | \'not-repository\';\n} | {\n    kind: \'repository\';\n    root: string;\n    branch: string;\n    base: string | null;\n    files: WorkspaceChangedFile[];\n    total: number;\n    added: number;\n    deleted: number;\n};',
   },
   {
     name: 'WorkspaceRenameRequest',

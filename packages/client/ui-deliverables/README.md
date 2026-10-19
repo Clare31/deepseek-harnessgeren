@@ -29,6 +29,14 @@ Mount this plugin alongside `ui-conversation` and the Host [workspace-changes](.
 
 Changed-file and delivery entry cards and hover previews follow the [R16 preview-card rule](../../../docs/ui-radius.md#radius-scale); their file-icon tiles use the same rule’s R10 exception. Each retains the same contour on hover.
 
+### Project and sources
+
+The conversation header's **Project and sources** menu shows the Session directory, the current repository's added and deleted line totals, and current-context sources. **Changes** and **View all** open a Project tab in the existing right Sidebar. Its file list compares HEAD with the complete worktree, including staged, unstaged, and non-ignored untracked files; these changes are not attributed to the current chat. Select a file to review its unified or side-by-side comparison, with optional line wrapping. Binary and oversized comparisons have explicit notices. Missing Git, directories outside a repository, and failed reads remain distinct states. Refresh manually, return focus to the application, or wait for a turn transition to read again; a failure keeps the last successful overview with a visible stale-data notice.
+
+**Add source** inserts an explicit file/folder reference or HTTP(S) URL into the existing Session draft. The user sends the draft through the normal composer; adding a link does not fetch it or send a message. **Browse project files** opens the existing Files tab. The Project tab lists and removes unsent textual references using the editor revision guard, without replacing other draft content or chips. Sent references remain historical facts and cannot be removed here. Sources rebuild from the current model surface after reload: explicit user references, attachments with a Host path, and successful structured `web_search` results. A supplied link and a returned search result remain distinct. Replaced or compacted-away messages do not contribute sources. The Web search row reports tool registration, not usable credentials, completed searches, or a per-chat enable switch.
+
+The owner-only `project.overview` and `project.diff` HTTP routes resolve directories from Session headers; callers cannot choose an arbitrary directory. Client resources share reads between the header and sidebar, retain refreshes arriving during a read, and cancel pending reads when released. [workspace-changes](../../deliverables/workspace-changes/README.md) owns Git execution and its limits. Removing this plugin removes the project menu and tab along with its deliverable UI.
+
 <a id="explicit-deliveries"></a>
 ### Explicit deliveries
 

@@ -837,6 +837,8 @@ describe('plugin registration', () => {
         'conversation.chat.turnTail': { kind: 'list', scope: 'session' },
         'tool.call.toolview': { kind: 'keyed', scope: 'session' },
         'sidebar.right.pane.tab': { kind: 'keyed', scope: 'session' },
+        'sidebar.right.pane.tab.title': { kind: 'keyed', scope: 'session' },
+        'conversation.session.header.utilities': { kind: 'list', scope: 'session' },
       },
     } as never, () => null)
     const registerTab = vi.fn(() => () => { registered = undefined })
@@ -844,6 +846,8 @@ describe('plugin registration', () => {
     ctx.provide('sidebarRightTabs', { register: (definition: unknown) => { registered = definition; return registerTab() } } as never)
     const openResource = vi.fn()
     ctx.provide('sidebarRight', { openResource } as never)
+    ctx.provide('resources', { register: () => () => {} } as never)
+    ctx.provide('sessions', { binding: () => undefined } as never)
     // ui-theme's Appearance row binds a durable scope through these two.
     const session = {
       canOpenWorkspacePath: () => Promise.resolve({ ok: true as const, value: true }),
@@ -864,7 +868,7 @@ describe('plugin registration', () => {
     expect(ctx.slots.entries('tool.call.toolview')).toHaveLength(1)
     expect(entry?.inject).toBeDefined()
     expect(registered).toMatchObject({ kind: 'changes-review', patterns: ['dsh-resource://changes-review/**'] })
-    const [tabEntry] = ctx.slots.entries('sidebar.right.pane.tab')
+    const tabEntry = ctx.slots.entries('sidebar.right.pane.tab').find(entry => entry.options.key === '@deepseek-ai/dsh-client-ui-deliverables')
     expect(tabEntry?.options.key).toBe('@deepseek-ai/dsh-client-ui-deliverables')
 
     // The prose face is live while the plugin is: a produced turn yields a

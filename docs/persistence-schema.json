@@ -26062,7 +26062,7 @@
       "names": [],
       "sources": [
         "packages/core/session/src/types.ts:289",
-        "packages/deliverables/workspace-changes/src/types.ts:106"
+        "packages/deliverables/workspace-changes/src/types.ts:145"
       ]
     },
     {

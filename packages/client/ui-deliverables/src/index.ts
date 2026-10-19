@@ -9,9 +9,10 @@ import type { Context } from '@deepseek-ai/cordis'
 import type {} from '@deepseek-ai/dsh-system-prompt'
 import type {} from '@deepseek-ai/dsh-workspace-changes/types'
 import { registerPresentOpen } from './present-open.ts'
+import { registerProjectRoutes } from './project-routes.ts'
 
 /** Services required for file-reference guidance, change summaries, and authenticated native opens. */
-export const inject = ['systemPrompt', 'connection', 'sessionQuery', 'sessionController', 'workspaceFiles', 'fs', 'sandboxPolicy', 'workspaceChanges']
+export const inject = ['systemPrompt', 'connection', 'sessionQuery', 'sessionController', 'workspaceFiles', 'fs', 'sandboxPolicy', 'workspaceChanges', 'workspaceProject', 'attachments', 'tools', 'agents']
 
 /** Static Web guidance for primary outputs and existing-file references. */
 const FILE_REFERENCE_PROMPT = 'Prefer showing the primary results within your final response alongside a brief explanation. '
@@ -28,6 +29,7 @@ const FILE_REFERENCE_PROMPT = 'Prefer showing the primary results within your fi
  */
 export function apply(ctx: Context): void {
   registerPresentOpen(ctx)
+  registerProjectRoutes(ctx)
   ctx.systemPrompt.section({
     name: 'ui:deliverable-file-references',
     order: ctx.systemPrompt.getSectionOrder('DELIVERABLE_FILE_REFERENCES'),

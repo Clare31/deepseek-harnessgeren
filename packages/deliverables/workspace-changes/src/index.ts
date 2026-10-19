@@ -18,10 +18,12 @@ import type {} from '@deepseek-ai/dsh-tools'
 import type { FsTarget } from '@deepseek-ai/dsh-fs'
 import { GitRunner } from './git.ts'
 import { TurnRecorder } from './recorder.ts'
+import { readProject, readProjectDiff } from './project.ts'
 import type { WorkspaceChanges } from './types.ts'
 
 export type {
   WorkspaceChangedFile, WorkspaceChanges, WorkspaceChangesSummary, WorkspaceDiffHunk, WorkspaceFileDiff,
+  WorkspaceProject, WorkspaceProjectReader,
 } from './types.ts'
 
 /** Stable Loader identity. */
@@ -129,6 +131,22 @@ export function apply(ctx: Context, config: Config): void {
     })
     return runner
   }
+  const projectTasks = new Set<Promise<unknown>>()
+  const projectRead = async <T>(signal: AbortSignal, operation: (git: GitRunner | null, signal: AbortSignal) => Promise<T>): Promise<T> => {
+    const request = AbortSignal.any([signal, lifetime.signal, AbortSignal.timeout(config.timeoutMs)])
+    const task = gitRunner().then(git => operation(git, request))
+    projectTasks.add(task)
+    try { return await task } finally { projectTasks.delete(task) }
+  }
+  ctx.effect(() => async () => {
+    lifetime.abort()
+    await Promise.allSettled(projectTasks)
+  })
+  ctx.provide('workspaceProject', {
+    read: (cwd, signal) => projectRead(signal, (git, signal) => readProject(git, cwd, config.maxFiles, signal)),
+    diff: (cwd, path, signal) => projectRead(signal, (git, signal) =>
+      readProjectDiff(git, cwd, path, config.maxFiles, config.maxFileBytes, signal)),
+  })
   const recorderFor = (session: Session, cwd: string): TurnRecorder => {
     let recorder = recorders.get(session)
     if (recorder === undefined) {

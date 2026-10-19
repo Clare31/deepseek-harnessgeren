@@ -1,0 +1,22 @@
+- text: Project and sources
+- button "Refresh project"
+- heading "Changes +2 −1" [level=3]
+- paragraph: Compare the entire worktree with HEAD, including staged, unstaged, and untracked files. Changes are not attributed to this chat.
+- paragraph: {{cwd}} main
+- button "View changes to new.txt": new.txt +1 −0
+- button "View changes to tracked.txt": tracked.txt +1 −1
+- heading "Sources Add source" [level=3]:
+  - text: Sources
+  - button "Add source"
+- paragraph: Supplied references and search results in the current model context. A web search tool does not establish that a search ran or credentials are available.
+- text: Web search Tool provided
+- button "Snapshot Search 1 Result 1 Search result"
+- button "Snapshot Search 2 Result 1 Search result"
+- button "Snapshot Search 1 Result 2 Search result"
+- button "Snapshot Search 2 Result 2 Search result"
+- button "Snapshot Search 1 Result 3 Search result"
+- button "Snapshot Search 2 Result 3 Search result"
+- button "Snapshot Search 1 Result 4 Search result"
+- button "Snapshot Search 2 Result 4 Search result"
+- heading "Unsent sources" [level=3]
+- paragraph: No unsent sources in the composer

@@ -1,0 +1,32 @@
+/** Project overview uses the shared menu material, theme colors, and compact header geometry. */
+.trigger { display: inline-flex; align-items: center; gap: 8px; height: 28px; max-width: 300px; padding: 0 8px; border: 0; border-radius: var(--dsw-radius-sm); background: transparent; color: var(--dsw-alias-label-secondary); font: var(--dsw-font-xs-13); cursor: pointer; }
+.trigger:hover, .trigger[aria-expanded='true'] { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-primary); }
+.triggerLabel, .name, .label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.triggerLabel { max-width: 130px; }
+.trigger svg, .row svg { flex: none; }
+.menu { width: min(300px, calc(100vw - 24px)); }
+.card { padding: 8px; font: var(--dsw-font-xs-13); color: var(--dsw-alias-label-primary); }
+.heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 32px; padding: 0 8px; color: var(--dsw-alias-label-secondary); }
+.heading:not(:first-child) { margin-top: 8px; }
+.name { font-weight: 500; }
+.row { display: flex; align-items: center; gap: 10px; box-sizing: border-box; width: 100%; min-height: 34px; padding: 6px 8px; border: 0; border-radius: var(--dsw-radius-sm); color: inherit; background: transparent; font: inherit; text-align: left; cursor: pointer; }
+.row:hover, .icon:hover { background: var(--dsw-alias-interactive-bg-hover); }
+.row:focus-visible, .trigger:focus-visible, .icon:focus-visible { outline: 2px solid var(--dsw-alias-border-l2); outline-offset: 1px; }
+.label { flex: 1; }
+.icon { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 28px; height: 28px; padding: 0; border: 0; border-radius: var(--dsw-radius-sm); background: transparent; color: inherit; cursor: pointer; }
+.counts { display: inline-flex; flex: none; gap: 6px; font: var(--dsw-font-xs-13); }
+.added { color: var(--dsw-alias-state-success-primary); }
+.deleted, .error { color: var(--dsw-alias-state-error-primary); }
+.muted { color: var(--dsw-alias-label-secondary); font-size: 12px; }
+.field { display: flex; flex-direction: column; gap: 8px; font: var(--dsw-font-xs-13); }
+.field input { box-sizing: border-box; width: 100%; padding: 10px; border: 1px solid var(--dsw-alias-border-l2); border-radius: var(--dsw-radius-sm); color: var(--dsw-alias-label-primary); background: var(--dsw-alias-interactive-bg-hover); font: inherit; }
+.error { margin: 8px 0; font: var(--dsw-font-xs-13); }
+.panel { display: flex; flex-direction: column; height: 100%; min-height: 0; font: var(--dsw-font-xs-13); color: var(--dsw-alias-label-primary); }
+.toolbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px; border-bottom: 0.5px solid var(--dsw-alias-border-l3); }
+.body { flex: 1; min-height: 0; overflow: auto; padding: 12px; scrollbar-gutter: stable; }
+.section { margin: 0 0 16px; }
+.section h3 { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0 0 8px; font: inherit; font-weight: 500; }
+.note { margin: 4px 0 12px; color: var(--dsw-alias-label-secondary); font-size: 12px; overflow-wrap: anywhere; }
+.diff { display: flex; flex: 1; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden; }
+.diff > div { flex: 1; min-height: 0; }
+@media (max-width: 700px) { .triggerLabel, .trigger > .counts { display: none; } .trigger { padding: 6px; } }

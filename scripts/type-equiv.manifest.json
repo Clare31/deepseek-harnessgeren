@@ -2481,6 +2481,11 @@
       "doc": "docs/subsystems/boot.md",
       "symbol": "PendingModule",
       "source": "packages/boot/hmr/src/index.ts"
+    },
+    {
+      "doc": "docs/subsystems/deliverables.md",
+      "symbol": "WorkspaceProject",
+      "source": "packages/deliverables/workspace-changes/src/types.ts"
     }
   ]
 }

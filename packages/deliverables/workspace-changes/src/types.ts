@@ -96,6 +96,45 @@ export interface WorkspaceChanges {
   diff(sessionId: SessionId, seq: number, index: number, signal: AbortSignal): Promise<WorkspaceFileDiff | undefined>
 }
 
+/** Repository state relative to HEAD, including staged, unstaged, and non-ignored untracked files. */
+export type WorkspaceProject =
+  | { kind: 'unavailable'; reason: 'git-missing' | 'not-repository' }
+  | {
+    kind: 'repository'
+    /** Repository root in the mounted execution world. */
+    root: string
+    /** Branch name, or abbreviated HEAD in detached mode. */
+    branch: string
+    /** Compared commit; null for an unborn branch. */
+    base: string | null
+    /** Paths relative to the Session directory, bounded by maxFiles. */
+    files: WorkspaceChangedFile[]
+    /** Complete number of changed paths. */
+    total: number
+    /** Added and deleted text lines across changed paths. */
+    added: number
+    deleted: number
+  }
+
+/** Read-only current-worktree queries; unrelated to per-turn attribution. */
+export interface WorkspaceProjectReader {
+  /**
+   * Inspect the repository containing a Session directory.
+   * @param cwd - Session working directory.
+   * @param signal - caller cancellation.
+   * @returns current repository differences or an explicit unavailable state; failures reject.
+   */
+  read(cwd: string, signal: AbortSignal): Promise<WorkspaceProject>
+  /**
+   * Compare an exact listed file against HEAD.
+   * @param cwd - Session working directory.
+   * @param path - Session-relative path from read().
+   * @param signal - caller cancellation.
+   * @returns the comparison, or undefined if the path is no longer listed; failures reject.
+   */
+  diff(cwd: string, path: string, signal: AbortSignal): Promise<WorkspaceFileDiff | undefined>
+}
+
 declare module '@deepseek-ai/dsh-session/types' {
   interface SessionEventMap {
     /**
@@ -111,5 +150,7 @@ declare module '@deepseek-ai/cordis' {
   interface Context {
     /** Per-turn changed-file summaries and comparisons of live Sessions. */
     workspaceChanges: WorkspaceChanges
+    /** Current HEAD-to-worktree reads without modifying the repository. */
+    workspaceProject: WorkspaceProjectReader
   }
 }

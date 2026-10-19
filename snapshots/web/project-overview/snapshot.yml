@@ -1,0 +1,9 @@
+version: 1
+scenario: project-overview
+profile: web
+composition: default
+recording: authored
+header:
+  class: web-default
+session:
+  source: ../web-search-round/session.v4.jsonl

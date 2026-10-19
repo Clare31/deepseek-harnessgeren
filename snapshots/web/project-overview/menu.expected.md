@@ -1,0 +1,10 @@
+- text: {{workspace}}
+- menuitem "Refresh project"
+- menuitem "Changes +2 −1"
+- text: Sources
+- menuitem "Add source"
+- menuitem "Web search Tool provided"
+- menuitem "Snapshot Search 1 Result 1"
+- menuitem "Snapshot Search 2 Result 1"
+- menuitem "Snapshot Search 1 Result 2"
+- menuitem "View all 8"

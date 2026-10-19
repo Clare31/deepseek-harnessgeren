@@ -27,6 +27,12 @@ import { DeliverablesTail, type DeliverablesInjected } from './Deliverables.tsx'
 import { ReviewTab, type ReviewInjected } from './ReviewTab.tsx'
 import { CHANGES_REVIEW_ID, changesReviewDefinition } from './review-definition.ts'
 import { createReviewStore } from './review-store.ts'
+import type {} from '@deepseek-ai/dsh-client-resources/client'
+import { fileAddressFor } from '@deepseek-ai/dsh-util-workspace-path'
+import { parseProjectAddress, projectAddress, sourceUrl } from '../project.ts'
+import { ProjectResources } from './project-resources.ts'
+import { ProjectOverview, type ProjectActions } from './ProjectOverview.tsx'
+import { ProjectTab, ProjectTitle } from './ProjectTab.tsx'
 import { en, NS, zh, type DeliverablesKey } from './locales.ts'
 import {
   deliverablesDefinition, presentedForClosing, producedFileMentions, selectProducedFiles,
@@ -40,7 +46,7 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
 }
 
 /** Required services for the tail-slot and tab-type registrations and their dictionaries. */
-export const inject = ['slots', 'locale', 'uiConversation', 'remote', 'remote.session', 'sidebarRightTabs', 'sidebarRight', 'configForms']
+export const inject = ['slots', 'locale', 'uiConversation', 'remote', 'remote.session', 'sidebarRightTabs', 'sidebarRight', 'configForms', 'resources', 'sessions']
 
 /**
  * Client plugin body: register the dictionaries, the turn-tail entry, and the comparison tab type.
@@ -83,6 +89,7 @@ export function apply(ctx: ClientContext): void {
     { name: 'tool.call.toolview', key: 'present', locale: NS }, PresentRow,
   ))
   const t = ctx.locale.bind(NS)
+  registerProject(ctx)
   ctx.effect(() => ctx.sidebarRightTabs.register(changesReviewDefinition(t)), 'ui-deliverables: changes-review type')
   ctx.effect(() => ctx.slots.inject('sidebar.right.pane.tab', () => ctx.slots.register(
     {
@@ -111,4 +118,58 @@ export function apply(ctx: ClientContext): void {
     },
   }
   ctx.provide('chatFileMentions', mentions)
+}
+
+function registerProject(ctx: ClientContext): void {
+  const t = ctx.locale.bind(NS)
+  const resources = new ProjectResources((...args) => fetch(...args), (sessionId, notify) => {
+    const binding = ctx.sessions.binding(sessionId)
+    if (binding === undefined) return () => {}
+    let running = binding.session.getSnapshot().running
+    return binding.session.subscribe(() => {
+      const next = binding.session.getSnapshot().running
+      if (next !== running) { running = next; notify() }
+    })
+  })
+  ctx.effect(() => {
+    const releases = [ctx.resources.register(resources.overview()), ctx.resources.register(resources.comparison())]
+    const refresh = (): void => { resources.refresh() }
+    window.addEventListener('focus', refresh)
+    const reset = ctx.on('connection/reset', refresh)
+    return async () => {
+      window.removeEventListener('focus', refresh)
+      reset()
+      for (const release of releases) release()
+      await resources.dispose()
+    }
+  }, 'ui-deliverables: project resources')
+  const actions: ProjectActions = {
+    refreshProject: (sessionId) =>{  resources.refresh(sessionId) },
+    openProject: (sessionId) => { ctx.sidebarRight.openResource(projectAddress(sessionId)) },
+    openProjectFiles: () => { ctx.sidebarRight.openTab('files') },
+    openSource: (sessionId, kind, target) => {
+      if (kind === 'file') {
+        const cwd = ctx.sessions.list.getSnapshot().byId[sessionId]?.cwd
+        ctx.sidebarRight.openResource(fileAddressFor(sessionId, cwd, target))
+      } else {
+        const url = sourceUrl(target)
+        if (url !== undefined) ctx.sidebarRight.openResource(url)
+      }
+    },
+  }
+  const id = '@deepseek-ai/dsh-client-ui-deliverables/project'
+  ctx.effect(() => ctx.sidebarRightTabs.register({
+    id, kind: 'project-overview', patterns: ['dsh-resource://project-overview/session/*'], priority: 'builtin',
+    canOpen: address => parseProjectAddress(address) !== undefined,
+    title: () => t('project.title'),
+  }), 'ui-deliverables: project tab')
+  ctx.slots.inject('conversation.session.header.utilities', () => ctx.slots.register({
+    name: 'conversation.session.header.utilities', id, locale: NS, order: 40, inject: (): ProjectActions => actions,
+  }, ProjectOverview))
+  ctx.slots.inject('sidebar.right.pane.tab', () => ctx.slots.register({
+    name: 'sidebar.right.pane.tab', key: id, locale: NS, inject: (): ProjectActions => actions,
+  }, ProjectTab))
+  ctx.slots.inject('sidebar.right.pane.tab.title', () => ctx.slots.register({
+    name: 'sidebar.right.pane.tab.title', key: id,
+  }, ProjectTitle))
 }

@@ -9,7 +9,9 @@
     "src/index.ts",
     "src/changes.ts",
     "src/presented.ts",
-    "src/present-open.ts"
+    "src/present-open.ts",
+    "src/project.ts",
+    "src/project-routes.ts"
   ],
   "references": [
     {
@@ -50,6 +52,15 @@
     },
     {
       "path": "../../sandbox/sandbox-policy"
+    },
+    {
+      "path": "../../attachment/attachment"
+    },
+    {
+      "path": "../../core/tools"
+    },
+    {
+      "path": "../../core/agent"
     }
   ]
 }

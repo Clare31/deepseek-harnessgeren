@@ -343,6 +343,13 @@ const SERVICE_ROLES: ServiceRole[] = [
     note: 'Serves the summary each workspace/changes event announced and each listed file\'s turn-start and turn-end comparison, by Session and event sequence, until that Session is disposed; the log carries only the turn.',
   },
   {
+    key: 'workspaceProject',
+    pkg: 'workspace-changes',
+    title: 'Read-only current repository overview',
+    mode: 'core',
+    note: 'Compares HEAD with staged, unstaged, and untracked files and serves bounded per-file patches without modifying Git state.',
+  },
+  {
     key: 'terminalController',
     pkg: 'api-terminal-controller',
     title: 'Session interactive terminal Remote controller',

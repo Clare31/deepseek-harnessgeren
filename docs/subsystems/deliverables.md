@@ -137,6 +137,33 @@ interface WorkspaceChanges {
 
 `tool-present` declaration-merges `deliverables/presented: { turn; callId; files: PresentedFile[] }` into `SessionEventMap`, appended once per successful final `present` result. `workspace-changes` merges `workspace/changes: { turn }`, appended when a top-level turn stops; the summary that event announced is not in the log but is returned by `workspaceChanges.summary(sessionId, seq)` for the event's sequence until the Session is disposed, so a conversation reopened after a Host restart has no changed-files card for its earlier turns. `workspaceChanges.diff(sessionId, seq, index, signal)` compares one listed file on the same terms. A later event for the same turn replaces the earlier one, so a client keeps only the latest. The generated [persistence catalog](../persistence-catalog.md#deliverablespresented--log-only) records both declaration sites. Neither event reaches the model.
 
+## `WorkspaceProject` — Current project state
+
+Current project reads compare HEAD with the worktree and remain independent of per-turn attribution. The [package reference](../../packages/deliverables/workspace-changes/README.md#current-repository-reads) owns query limits and failures.
+
+```ts type-equiv
+/** Repository state relative to HEAD, including staged, unstaged, and non-ignored untracked files. */
+type WorkspaceProject =
+  | { kind: 'unavailable'; reason: 'git-missing' | 'not-repository' }
+  | {
+    kind: 'repository'
+    /** Repository root in the mounted execution world. */
+    root: string
+    /** Branch name, or abbreviated HEAD in detached mode. */
+    branch: string
+    /** Compared commit; null for an unborn branch. */
+    base: string | null
+    /** Paths relative to the Session directory, bounded by maxFiles. */
+    files: WorkspaceChangedFile[]
+    /** Complete number of changed paths. */
+    total: number
+    /** Added and deleted text lines across changed paths. */
+    added: number
+    deleted: number
+  }
+
+```
+
 <!-- BEGIN GENERATED cordis-surface (gen-cordis-catalog.ts) — do not edit between markers -->
 
 <a id="cordis-surface"></a>
@@ -173,6 +200,33 @@ diff(sessionId: SessionId, seq: number, index: number, signal: AbortSignal): Pro
 ```
 
 Types: [SessionId](core.md)
+
+Source: [`packages/deliverables/workspace-changes/src/types.ts`](../../packages/deliverables/workspace-changes/src/types.ts)
+
+<a id="ctxworkspaceproject--workspaceprojectreader"></a>
+
+### `ctx.workspaceProject` — `WorkspaceProjectReader`
+
+Read-only current-worktree queries; unrelated to per-turn attribution.
+
+```ts cordis-catalog
+/**
+ * Inspect the repository containing a Session directory.
+ * @param cwd - Session working directory.
+ * @param signal - caller cancellation.
+ * @returns current repository differences or an explicit unavailable state; failures reject.
+ */
+read(cwd: string, signal: AbortSignal): Promise<WorkspaceProject>
+
+/**
+ * Compare an exact listed file against HEAD.
+ * @param cwd - Session working directory.
+ * @param path - Session-relative path from read().
+ * @param signal - caller cancellation.
+ * @returns the comparison, or undefined if the path is no longer listed; failures reject.
+ */
+diff(cwd: string, path: string, signal: AbortSignal): Promise<WorkspaceFileDiff | undefined>
+```
 
 Source: [`packages/deliverables/workspace-changes/src/types.ts`](../../packages/deliverables/workspace-changes/src/types.ts)
 <!-- END GENERATED cordis-surface -->
