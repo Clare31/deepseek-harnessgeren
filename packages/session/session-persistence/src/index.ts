@@ -29,6 +29,7 @@ export {
   SessionHandleClosedError,
   SessionOwnershipLostError,
   SessionPersistenceCorruptionError,
+  SessionPersistenceInUseError,
   SessionPersistenceNotFoundError,
   SessionReadOnlyError,
   sessionFormatVersionRefusal,
@@ -105,6 +106,12 @@ export interface SessionPersistenceStatOptions {
 /** Options for {@link SessionPersistence.list}. */
 export interface SessionPersistenceListOptions {
   /** Optional cancellation for backend listing work. */
+  readonly signal?: AbortSignal
+}
+
+/** Options for {@link SessionPersistence.delete}. */
+export interface SessionPersistenceDeleteOptions {
+  /** Optional cancellation observed before backend work starts. */
   readonly signal?: AbortSignal
 }
 
@@ -201,6 +208,23 @@ export abstract class SessionPersistence extends Service {
    * @returns one snapshot per stored session.
    */
   abstract list(options?: SessionPersistenceListOptions): Promise<readonly SessionPersistenceSnapshot[]>
+
+  /**
+   * Permanently remove one stored Session: every generation artifact and every
+   * backend-owned file in its session directory. A missing Session resolves as
+   * an idempotent no-op so a retried deletion cannot fail on the first success.
+   *
+   * The deletion is exclusive against every live user of the artifact: an id
+   * with an open handle in this process, a created-but-unmaterialized session,
+   * or a write owner in another process is refused with
+   * {@link SessionPersistenceInUseError}. Callers stop or dispose those owners
+   * first; the service never deletes underneath them.
+   * @param id - the stored Session to remove.
+   * @param options - optional cancellation before backend work starts.
+   * @throws {SessionPersistenceInUseError} when the Session still has a handle
+   *   or a cross-process write owner.
+   */
+  abstract delete(id: SessionId, options?: SessionPersistenceDeleteOptions): Promise<void>
 }
 
 export default SessionPersistence

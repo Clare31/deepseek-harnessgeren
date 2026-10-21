@@ -53,6 +53,18 @@
 /deepseek-ai-dsh-web-app/model-experience:
   en: 215e7ba838619b7b
   zh: a311da3843709f90
+/deepseek-ai-dsh-web-app/model-experience/progress-updates:
+  en: 2050199593c4e015
+  zh: bf1abe31c2df2af3
+/deepseek-ai-dsh-web-app/model-experience/progress-updates/what-the-model-sees:
+  en: 93976b8aacb08fa1
+  zh: 47d1b68d11d93d5e
+/deepseek-ai-dsh-web-app/model-experience/progress-updates/token-effect:
+  en: 8329f7b757047500
+  zh: cdf6d2bd88b08899
+/deepseek-ai-dsh-web-app/model-experience/progress-updates/kv-cache-effect:
+  en: 9953bd8e00efb099
+  zh: c187f8bdb527c202
 /deepseek-ai-dsh-web-app/model-experience/web-runtime-variable:
   en: 623bf8a0bf05599d
   zh: 398ded2e7b20c1ea

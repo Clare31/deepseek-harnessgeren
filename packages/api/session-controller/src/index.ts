@@ -10,8 +10,9 @@ import { errorChain, ReasoningEffortId, type MessageSource } from '@deepseek-ai/
 import type {} from '@deepseek-ai/dsh-client-file-upload'
 import { canOpenNativePath, nativeFileManager, nativeFileApplications, openNativeFileApplication, openNativeAssociatedPath, revealNativePath } from '@deepseek-ai/dsh-native-command'
 import type { SessionId } from '@deepseek-ai/dsh-session'
-import type { SessionInspection } from '@deepseek-ai/dsh-session-persistence'
+import { SessionPersistenceInUseError, type SessionInspection } from '@deepseek-ai/dsh-session-persistence'
 import type {} from '@deepseek-ai/dsh-session-projection-cache'
+import type {} from '@deepseek-ai/dsh-workspace'
 import { SessionQueryError, type SessionObservation } from '@deepseek-ai/dsh-session-query'
 import { Remote, RemoteError, TypertRemoteService, principalOf } from '@deepseek-ai/dsh-typert-protocol'
 import { canonicalClientTimeZone } from '@deepseek-ai/dsh-util-time'
@@ -43,6 +44,8 @@ import type {
   SessionControlFrame,
   SessionCreateRequest,
   SessionCreateValue,
+  SessionDeleteRequest,
+  SessionDeleteValue,
   SessionFollowFrame,
   SessionFollowRequest,
   SessionForkRequest,
@@ -126,6 +129,7 @@ export class SessionController extends TypertRemoteService {
     'llm',
     'remoteAccess',
     'sessions',
+    'sessionPersistence',
     'sessionProjections',
     'sessionQuery',
     'typert',
@@ -430,6 +434,61 @@ export class SessionController extends TypertRemoteService {
   @Remote('rename')
   rename(request: SessionRenameRequest): Promise<SessionRenameValue> {
     return this.commands.rename(request)
+  }
+
+  /**
+   * Permanently delete one stored Session: stop its work, dispose the Agent
+   * this Host runs for it, remove every stored generation, and forget the
+   * Workspace registry's archive, pin, and accounting records.
+   *
+   * The archive gate is installed before the stop so a wake issued while the
+   * work is being stopped cannot start another model step. A Session whose
+   * Agent belongs to another owner, or whose log another reader still holds,
+   * is refused rather than removed underneath that owner.
+   * @param request - Session identity and whether running work may be stopped.
+   * @returns acknowledgement after the stored log is gone.
+   */
+  @Remote('delete')
+  async deleteSession(request: SessionDeleteRequest): Promise<SessionDeleteValue> {
+    const { sessionId } = request
+    const stored = await this.ctx.sessionPersistence.stat(sessionId)
+    if (stored === undefined && this.ctx.sessions.get(sessionId) === undefined) {
+      throw new RemoteError('session/not-found', `session "${sessionId}" not found`, { sessionId })
+    }
+    const archived = this.ctx.workspaceRegistry.archivedSessionIds.includes(sessionId)
+    if (request.stopActivity === true) {
+      if (archived) await this.ctx.workspaceRegistry.stopSessionActivity(sessionId)
+      else await this.ctx.workspaceRegistry.archiveSession(sessionId, { stopActivity: true })
+    } else {
+      const activity = await this.ctx.waterfall(
+        'workspace/session-activity', { sessionId }, () => Promise.resolve([]),
+      )
+      if (activity.length > 0) {
+        throw new RemoteError(
+          'session/active',
+          `session "${sessionId}" is active; stop its work before deleting it`,
+          { sessionId, activity },
+        )
+      }
+    }
+    await this.agents.disposeSession(sessionId)
+    if (this.ctx.sessions.get(sessionId) !== undefined) {
+      throw new RemoteError(
+        'session/live',
+        `session "${sessionId}" is still live under another owner and cannot be deleted`,
+        { sessionId },
+      )
+    }
+    try {
+      await this.ctx.sessionPersistence.delete(sessionId)
+    } catch (error: unknown) {
+      if (error instanceof SessionPersistenceInUseError) {
+        throw new RemoteError('session/live', error.message, { sessionId }, { cause: error })
+      }
+      throw error
+    }
+    await this.ctx.workspaceRegistry.forgetSession(sessionId)
+    return { deleted: true }
   }
 
   /**

@@ -139,6 +139,7 @@ class FakeSessions implements ISessions {
   readonly list: MutableSource<SessionListState>
   readonly create: ReturnType<typeof vi.fn<ISessions['create']>>
   readonly fork = vi.fn<ISessions['fork']>(async () => sid('forked'))
+  readonly deleteCalls: SessionId[] = []
   readonly retained: RetainedSession[] = []
   readonly refreshProjections = vi.fn<ISessions['refreshProjections']>(() => Promise.resolve())
   readonly retain = vi.fn<ISessions['retain']>((target) => {
@@ -172,6 +173,14 @@ class FakeSessions implements ISessions {
     this.list = new MutableSource(initial)
     this.create = vi.fn<ISessions['create']>(async options =>
       options?.sessionId ?? sid(`created-${String(options?.workspaceId ?? 'none')}`))
+  }
+
+  async delete(sessionId: SessionId): Promise<void> {
+    this.deleteCalls.push(sessionId)
+    this.list.update((state) => {
+      const { [sessionId]: _removed, ...byId } = state.byId
+      return { ...state, ids: state.ids.filter(id => id !== sessionId), byId }
+    })
   }
 }
 
@@ -1466,6 +1475,30 @@ describe('UiWorkspaceService', () => {
     b.workspaces.onArchive = () => Promise.reject(new Error('archive rejected'))
     await expect(b.uiWorkspace.archiveSession(idle)).rejects.toThrow('archive rejected')
     expect(b.workspaces.archiveCalls).toEqual([idle, idle])
+  })
+
+  it('clears a selected Session and forwards permanent deletion', async () => {
+    const b = bench()
+    b.uiWorkspace.openSession(sid('current'))
+
+    await b.uiWorkspace.deleteSession(sid('current'))
+
+    expect(b.sessions.deleteCalls).toEqual([sid('current')])
+    expect(b.sessions.list.getSnapshot().ids).not.toContain(sid('current'))
+    expect(b.sessions.retained[0]!.release).toHaveBeenCalledOnce()
+    expect(b.selectPanel).toHaveBeenCalledTimes(2)
+  })
+
+  it('clears the view before a refused deletion and preserves the failure', async () => {
+    const b = bench()
+    b.uiWorkspace.openSession(sid('current'))
+    b.sessions.delete = async () => { throw new Error('delete rejected') }
+
+    await expect(b.uiWorkspace.deleteSession(sid('current'))).rejects.toThrow('delete rejected')
+
+    // The host refusal leaves the row in the catalog; the view was already cleared.
+    expect(b.sessions.retained[0]!.release).toHaveBeenCalledOnce()
+    expect(b.selectPanel).toHaveBeenCalledTimes(2)
   })
 
   it('forwards unarchive commands and preserves failures', async () => {

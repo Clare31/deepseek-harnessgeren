@@ -1076,6 +1076,29 @@ describe('registry-global session archive', () => {
     expect(result.registry.archivedSessionIds).toEqual(['gone', 'kept'])
   })
 
+  it('forgets accounting, archive, and pin records for a deleted session', async () => {
+    const dir = await makeDir('forget-home')
+    const result = await harness({ sessions: [header('kept', dir, 100), header('gone', dir, 200)] })
+    const workspace = result.registry.list()[0]!
+    await result.registry.pinSession(SessionId('gone'))
+    await result.registry.archiveSession(SessionId('kept'))
+    expect(result.registry.pinnedSessionIds).toEqual(['gone'])
+    expect(result.registry.archivedSessionIds).toEqual(['kept'])
+    expect(workspace.sessionIds).toEqual(expect.arrayContaining(['kept', 'gone']))
+
+    await result.registry.forgetSession(SessionId('gone'))
+    await result.registry.forgetSession(SessionId('kept'))
+
+    expect(result.registry.pinnedSessionIds).toEqual([])
+    expect(result.registry.archivedSessionIds).toEqual([])
+    expect(workspace.sessionIds).toEqual([])
+    expect(storedState(result.pool).pinnedSessionIds).toEqual([])
+    expect(storedState(result.pool).archivedSessionIds).toEqual([])
+
+    // A retried deletion resolves without another write.
+    await expect(result.registry.forgetSession(SessionId('gone'))).resolves.toBeUndefined()
+  })
+
   it('accepts unaccounted and live sessions but rejects unknown ids without writing', async () => {
     const dir = await makeDir('archive-strays')
     const live = await makeDir('archive-live')

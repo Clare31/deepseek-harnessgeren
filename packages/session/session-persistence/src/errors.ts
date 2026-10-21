@@ -36,6 +36,19 @@ export class SessionAlreadyOwnedError extends Error {
   }
 }
 
+/**
+ * `delete` found the session bound to an open handle or to a created but
+ * unmaterialized session: removing the artifact underneath them would leave a
+ * reader or writer observing a log that no longer exists.
+ */
+export class SessionPersistenceInUseError extends Error {
+  /** @param sessionId - the session whose artifact cannot be removed yet. */
+  constructor(readonly sessionId: SessionId) {
+    super(`session "${sessionId}" still has an open handle and cannot be deleted`)
+    this.name = 'SessionPersistenceInUseError'
+  }
+}
+
 /** A mutation (`append`/`flush`) was called on a read handle. */
 export class SessionReadOnlyError extends Error {
   /**

@@ -24,11 +24,13 @@ import { en as commonEn } from '@deepseek-ai/dsh-client-locale/src/locales/en.ts
 import { zh as commonZh } from '@deepseek-ai/dsh-client-locale/src/locales/zh.ts'
 import type {
   MenuOpenState, RowToast, RowToastState, SessionArchiveConfirmInjected, SessionArchiveConfirmRequest,
+  SessionDeleteConfirmInjected, SessionDeleteConfirmRequest,
   SessionRenameDialogInjected, SessionRenameTarget,
 } from '../src/client/contract/slots.ts'
 import {
   ArchiveSessionMenuItem, ArchiveSessionRowButton, SessionArchiveConfirmDialog,
 } from '../src/client/session-actions/ArchiveSession.tsx'
+import { DeleteSessionMenuItem, SessionDeleteConfirmDialog } from '../src/client/session-actions/DeleteSession.tsx'
 import { ForkSessionMenuItem } from '../src/client/session-actions/ForkSession.tsx'
 import { PinSessionMenuItem, PinSessionRowButton } from '../src/client/session-actions/PinSession.tsx'
 import { RenameSessionMenuItem, SessionRenameDialog } from '../src/client/session-actions/RenameSession.tsx'
@@ -821,4 +823,98 @@ it('shows effective Session shortcuts while menu clicks keep the row target', ()
   expect(requestSessionRename).toHaveBeenCalledWith(ROW.sessionId, ROW.displayTitle)
   expect(forkSession).toHaveBeenCalledWith(ROW.sessionId)
   expect(archiveSession).toHaveBeenCalledWith(ROW.sessionId)
+})
+
+describe('delete action', () => {
+  it('menu row starts a new group, closes the menu, then requests confirmation', () => {
+    const { state, setMenuOpen } = openMenu()
+    const requestDeleteSession = vi.fn()
+    render(<DeleteSessionMenuItem {...menuRow(state)} requestDeleteSession={requestDeleteSession} />)
+    expect(screen.getByRole('separator')).toBeDefined()
+    const row = screen.getByRole('menuitem', { name: '彻底删除会话' })
+    fireEvent.click(row)
+    expect(setMenuOpen).toHaveBeenCalledWith(false)
+    expect(requestDeleteSession).toHaveBeenCalledWith(ROW.sessionId)
+    expect(callOrder(setMenuOpen)).toBeLessThan(callOrder(requestDeleteSession))
+  })
+
+  /** The dialog over a test-owned request source; settling clears the request the way apply does. */
+  function deleteDialog(deleteSession: SessionDeleteConfirmInjected['deleteSession'], translate = t) {
+    const request = createSnapshotStore<SessionDeleteConfirmRequest | null>(null)
+    const settleSessionDelete = vi.fn(() => { request.set(null) })
+    render(
+      <SessionDeleteConfirmDialog
+        {...overlay}
+        t={translate}
+        useDeleteRequest={bindSnapshotSelector(request)}
+        settleSessionDelete={settleSessionDelete}
+        deleteSession={deleteSession}
+      />,
+    )
+    const ask = (): void => {
+      act(() => { request.set({ sessionId: sid('one'), displayTitle: 'Doomed session' }) })
+    }
+    return { settleSessionDelete, ask }
+  }
+
+  it('renders nothing until a confirmation is requested', () => {
+    deleteDialog(vi.fn(async () => {}))
+    expect(screen.queryByRole('dialog')).toBeNull()
+  })
+
+  it.each([t, tEn])('names the session, warns about permanence, and deletes on confirm', async (translate) => {
+    const pending = Promise.withResolvers<undefined>()
+    const deleteSession = vi.fn(() => pending.promise)
+    const { ask, settleSessionDelete } = deleteDialog(deleteSession, translate)
+    ask()
+
+    expect(screen.getByRole('dialog', { name: translate('delete.confirm.title') })).toBeDefined()
+    expect(screen.getByText(translate('delete.confirm.warning'))).toBeDefined()
+    expect(screen.getByText(
+      translate('delete.confirm.desc', { title: 'Doomed session' }),
+      { exact: false },
+    )).toBeDefined()
+
+    fireEvent.click(screen.getByRole('button', { name: translate('delete.confirm.action') }))
+    expect(deleteSession).toHaveBeenCalledWith(ROW.sessionId)
+    expect(screen.getByText(translate('delete.confirm.pending'))).toBeDefined()
+
+    await act(async () => { pending.resolve(undefined) })
+    expect(settleSessionDelete).toHaveBeenCalledOnce()
+  })
+
+  it('cancelling settles without deleting', () => {
+    const deleteSession = vi.fn(async () => {})
+    const { ask, settleSessionDelete } = deleteDialog(deleteSession)
+    ask()
+    fireEvent.click(screen.getByRole('button', { name: '取消' }))
+    expect(deleteSession).not.toHaveBeenCalled()
+    expect(settleSessionDelete).toHaveBeenCalledOnce()
+  })
+
+  it('keeps the dialog open with a live-session message when the Host refuses', async () => {
+    const failure = Object.assign(new Error('session is live'), {
+      name: 'SessionDeleteError',
+      rpcError: { code: 'session/live', message: 'session is live' },
+    })
+    const { ask, settleSessionDelete } = deleteDialog(vi.fn(async () => { throw failure }))
+    ask()
+    fireEvent.click(screen.getByRole('button', { name: '彻底删除' }))
+
+    expect((await screen.findByRole('alert')).textContent).toBe(t('delete.confirm.live'))
+    expect(settleSessionDelete).not.toHaveBeenCalled()
+    expect(screen.getByRole('dialog')).toBeDefined()
+  })
+
+  it('shows an unrecognized Host diagnostic as written', async () => {
+    const failure = Object.assign(new Error('storage backend down'), {
+      name: 'SessionDeleteError',
+      rpcError: { code: 'gateway/internal', message: 'storage backend down' },
+    })
+    const { ask } = deleteDialog(vi.fn(async () => { throw failure }))
+    ask()
+    fireEvent.click(screen.getByRole('button', { name: '彻底删除' }))
+
+    expect((await screen.findByRole('alert')).textContent).toBe('storage backend down')
+  })
 })

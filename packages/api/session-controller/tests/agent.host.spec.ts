@@ -359,4 +359,35 @@ describe('ApiSession creation', () => {
     await expect(agents.createSession({ cwd: join(file, 'child'), reusable: () => true }))
       .rejects.toThrow('failed to ensure project directory')
   })
+
+  it('disposes only the Agent handle this controller created', async () => {
+    const { ctx, agents } = await harness()
+    const dispose = vi.fn(() => Promise.resolve())
+    ctx.agents.setFactory({
+      createAgent: async (ownerCtx, options) => {
+        const session = ctx.sessions.create(options.sessionId, {
+          ...options.meta === undefined ? {} : { meta: options.meta },
+        })
+        const created = { id: session.id, session, status: 'idle', ctx: ownerCtx } as Agent
+        await ctx.agents.register(created)
+        return { agent: created, dispose }
+      },
+      resume: () => Promise.reject(new Error('resume must not run')),
+    })
+
+    const created = await agents.createSession({
+      sessionId: SessionId('owned-agent'),
+      cwd: (() => {
+        const dir = mkdtempSync(join(tmpdir(), 'dsh-session-controller-owned-'))
+        tempDirs.push(dir)
+        return dir
+      })(),
+      reusable: () => true,
+    })
+
+    await expect(agents.disposeSession(created.agent.id)).resolves.toBe(true)
+    expect(dispose).toHaveBeenCalledOnce()
+    // A second deletion of the same id has no owned handle left.
+    await expect(agents.disposeSession(created.agent.id)).resolves.toBe(false)
+  })
 })

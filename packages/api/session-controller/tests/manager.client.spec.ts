@@ -93,6 +93,36 @@ describe('SessionManager instances', () => {
     expect(manager.getListSnapshot().items[0]?.blank).toBe(true)
   })
 
+  it('deletes through the Host after dropping the resident instance and refreshes the list', async ({ mock, remote }) => {
+    const manager = makeManager(mock, remote)
+    onTestFinished(() => manager.dispose())
+    manager.handleSessionAdded(summary(S1))
+    const session = manager.get(S1)!
+    const drop = vi.spyOn(manager, 'drop')
+    remote.session.list.mockResolvedValueOnce(ok({ items: [] }))
+
+    const result = await manager.delete(S1)
+
+    expect(result).toEqual({ ok: true, value: { deleted: true } })
+    expect(drop).toHaveBeenCalledWith(S1, session)
+    expect(remote.session.delete).toHaveBeenCalledWith({ sessionId: S1, stopActivity: true })
+    expect(manager.getListSnapshot().items).toEqual([])
+  })
+
+  it('returns the Host refusal after dropping the instance and keeps the row', async ({ mock, remote }) => {
+    const manager = makeManager(mock, remote)
+    onTestFinished(() => manager.dispose())
+    manager.handleSessionAdded(summary(S1))
+    const refusal = new RemoteError('session/live', 'session is still live', { sessionId: S1 })
+    remote.session.delete.mockResolvedValueOnce(err(refusal))
+    remote.session.list.mockResolvedValueOnce(ok({ items: [summary(S1)] }))
+
+    const result = await manager.delete(S1)
+
+    expect(result).toEqual({ ok: false, error: refusal })
+    expect(manager.getListSnapshot().items.map(item => item.sessionId)).toEqual([S1])
+  })
+
   it('retains running for an unlisted child with only a retained address', async ({ mock, remote }) => {
     const address: SubagentAddress = { parentSessionId: S1, childSessionId: S2, mode: 'continuable' }
     const manager = makeManager(mock, remote)

@@ -5,7 +5,7 @@ import { mkdir } from 'node:fs/promises'
 import type { Context } from '@deepseek-ai/cordis'
 import { installModelSelection } from '@deepseek-ai/dsh-agent'
 import type {
-  Agent, AgentOptions, AgentSetup, ModelSelection as AgentModelSelection, ModelSelectionRef,
+  Agent, AgentHandle, AgentOptions, AgentSetup, ModelSelection as AgentModelSelection, ModelSelectionRef,
 } from '@deepseek-ai/dsh-agent'
 import type {} from '@deepseek-ai/dsh-agent-default-model'
 import type {} from '@deepseek-ai/dsh-agent-preset-registry'
@@ -170,6 +170,8 @@ export async function inspectApiSession(
 export class ApiSessionAgentController {
   private readonly resumes = new Map<SessionId, Promise<Agent>>()
   private readonly claims = new Map<SessionId, Promise<void>>()
+  /** Handles this controller created; only they may be torn down by a deletion. */
+  private readonly owned = new Map<SessionId, AgentHandle>()
   private readonly selections = new WeakMap<Agent, InstalledSelection>()
   private readonly imageAdmissionChains = new WeakMap<Agent, Promise<void>>()
 
@@ -208,6 +210,27 @@ export class ApiSessionAgentController {
    */
   async resolveObservedAgent(observation: SessionObservation): Promise<ApiSessionAgentResult> {
     return this.resolve(observation.header.id, observation)
+  }
+
+  /**
+   * Dispose the Agent this controller created for one Session, if it owns one.
+   * Waits out an in-flight resume and any queued create first, so a deletion
+   * cannot race a publication that would leave a writer on the removed log.
+   * A Session whose Agent another owner published (a subagent, or a controller
+   * instance this one replaced) is left alone and reported as not disposed.
+   * @param sessionId - Session whose owned Agent is stopped.
+   * @returns whether an Agent was disposed.
+   */
+  async disposeSession(sessionId: SessionId): Promise<boolean> {
+    const resume = this.resumes.get(sessionId)
+    if (resume !== undefined) await resume.catch(() => undefined)
+    const claim = this.claims.get(sessionId)
+    if (claim !== undefined) await claim
+    const handle = this.owned.get(sessionId)
+    if (handle === undefined) return false
+    this.owned.delete(sessionId)
+    await handle.dispose()
+    return true
   }
 
   private async resolve(
@@ -437,11 +460,13 @@ export class ApiSessionAgentController {
     if (published !== undefined && hasApiSessionSubagentOwner(this.ctx, published, live)) {
       throw new ApiSessionSubagentOwnership(sessionId)
     }
-    return (await this.ctx.agents.resume({
+    const handle = await this.ctx.agents.resume({
       resumeSessionId: sessionId,
       agentOptions: this.agentOptions(),
       setup: composition.setup,
-    })).agent
+    })
+    this.owned.set(sessionId, handle)
+    return handle.agent
   }
 
   private async inOrder<Value>(sessionId: SessionId, operation: () => Promise<Value>): Promise<Value> {
@@ -566,7 +591,7 @@ export class ApiSessionAgentController {
     } catch (error: unknown) {
       throw new Error(`failed to ensure project directory "${cwd}": ${String(error)}`, { cause: error })
     }
-    return (await this.ctx.agents.create({
+    const handle = await this.ctx.agents.create({
       sessionId,
       agentOptions: this.agentOptions(),
       meta: {
@@ -574,7 +599,9 @@ export class ApiSessionAgentController {
         ...(composition.agentPreset === undefined ? {} : { agentPreset: composition.agentPreset }),
       },
       setup: composition.setup,
-    })).agent
+    })
+    this.owned.set(sessionId, handle)
+    return handle.agent
   }
 
   private agentOptions(): AgentOptions {

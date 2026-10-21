@@ -146,6 +146,20 @@ Read these pages when you want to go deeper into the shared core, the browser re
 <a id="model-experience"></a>
 ## Model Experience
 
+### Progress updates
+
+#### What the model sees
+
+The Standard, PTC, and Creation presets ask the assistant to explain its first action before using tools, report meaningful results and next actions between tool groups, and finish with the outcome and verification. These updates use ordinary assistant text, separate from model-provided reasoning. Settings → General → Work details → Verbose keeps process rows visible; reasoning and individual tool details retain their own disclosure controls. The persona suffix guides model behavior rather than guaranteeing a message before every tool call, and does not provide timer-based updates during a long-running tool call.
+
+#### Token effect
+
+The persona suffix contributes fixed instruction text to every request from these presets; generated progress updates contribute assistant output tokens.
+
+#### KV Cache effect
+
+The suffix stays unchanged between steps. Its first use changes the system-prompt suffix; cache reuse depends on the provider.
+
 ### Web runtime variable
 
 #### What the model sees

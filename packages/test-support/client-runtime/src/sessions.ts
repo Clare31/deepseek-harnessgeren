@@ -311,7 +311,7 @@ export class TestSessions implements ISessions {
 
   /** Calls observed on the service-level face, newest last. */
   readonly calls: {
-    method: 'create' | 'refreshProjections' | 'refresh' | 'search' | 'fork'
+    method: 'create' | 'refreshProjections' | 'refresh' | 'search' | 'fork' | 'delete'
     args: unknown[]
   }[] = []
 
@@ -495,6 +495,18 @@ export class TestSessions implements ISessions {
       })
       this.generations.get(id as SessionId)?.snapshot.update((draft) => { draft.removed = true })
     })
+  }
+
+  /**
+   * Permanently delete a catalog row and release its retained generation.
+   * @param id - session id.
+   */
+  async delete(id: SessionId): Promise<void> {
+    this.calls.push({ method: 'delete', args: [id] })
+    await this.remove(id)
+    const generation = this.generations.get(id)
+    if (generation !== undefined) this.drop(id, generation)
+    this.addresses.delete(id)
   }
 
   /**

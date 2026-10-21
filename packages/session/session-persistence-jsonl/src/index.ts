@@ -23,11 +23,12 @@ import pLimit, { type LimitFunction } from 'p-limit'
 import {
   SessionPersistence, SessionPersistenceRevision, SessionFormatUnsupportedError,
   SessionPersistenceCorruptionError,
-  SessionAlreadyExistsError, SessionPersistenceNotFoundError,
+  SessionAlreadyExistsError, SessionAlreadyOwnedError, SessionPersistenceInUseError, SessionPersistenceNotFoundError,
   assertStoredId, materializeCreateHeader, sessionFormatVersionRefusal, validateStoredEvents,
   type SessionAccess, type SessionHandle,
   type SessionHandleReadResult,
   type SessionLocation, type SessionPersistenceCreateOptions,
+  type SessionPersistenceDeleteOptions,
   type SessionPersistenceListOptions, type SessionPersistenceOpenOptions,
   type SessionPersistenceSnapshot, type SessionPersistenceStatOptions,
   type SessionPersistenceRevision as PersistenceRevision,
@@ -559,6 +560,44 @@ class JsonlSessionPersistence extends SessionPersistence {
     }
     signal?.throwIfAborted()
     return snapshots
+  }
+
+  /**
+   * Permanently remove one stored session's directory, including every
+   * generation artifact and the lock file. The in-process handle check and the
+   * cross-process write lease both run before any bytes are removed, so an
+   * open reader, an unmaterialized create, or another process's writer keeps
+   * the log intact.
+   * @param id - the stored session to remove.
+   * @param options - optional cancellation before backend work starts.
+   */
+  async delete(id: SessionId, options?: SessionPersistenceDeleteOptions): Promise<void> {
+    options?.signal?.throwIfAborted()
+    if (this.tracker.hasHandle(id)) throw new SessionPersistenceInUseError(id)
+    await this.ensureRootEncoding()
+    options?.signal?.throwIfAborted()
+    const selected = await this.findLog(id, options?.signal)
+    if (selected === undefined) return
+    const dir = dirname(selected.sourcePath)
+    // The lease makes the removal exclusive against a writer in another
+    // process. `acquire` creates the directory when absent, which cannot
+    // happen here: `findLog` just selected a file inside it.
+    let lease: SessionWriteLease
+    try {
+      lease = await SessionWriteLease.acquire(dir, id)
+    } catch (error: unknown) {
+      // A live writer is exactly the condition the seam refuses to delete under.
+      if (error instanceof SessionAlreadyOwnedError) throw new SessionPersistenceInUseError(id)
+      throw error
+    }
+    try {
+      options?.signal?.throwIfAborted()
+      await rm(dir, { recursive: true, force: true })
+    } finally {
+      await lease.release()
+    }
+    this.coldLogMemo.delete(id)
+    this.migrationPreparations.delete(id)
   }
 
   // --- handle-facing storage internals (package-private via the handle class below) ---

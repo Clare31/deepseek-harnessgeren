@@ -466,6 +466,40 @@ export class WorkspaceRegistry extends Service {
   }
 
   /**
+   * Drop every registry record of one Session whose durable log was removed:
+   * its workspace accounting slot, its archive and pin entries, and the
+   * header/path indexes those projections read. Idempotent — an id no record
+   * mentions resolves without a write.
+   *
+   * A caller owns the Session's lifecycle before this point: it stops the
+   * Session's work, disposes its Agent, and deletes the stored log. This
+   * method only forgets the registry's own bookkeeping.
+   * @param sessionId - The Session whose records are dropped.
+   * @returns resolution after durability.
+   */
+  forgetSession(sessionId: SessionId): Promise<void> {
+    return this.enqueueOperation(async () => {
+      for (const entity of this.entities.values()) {
+        if (entity.sessionIds.includes(sessionId)) await entity.detachSession(sessionId)
+      }
+      const state = this.requireState()
+      const archived = state.archivedSessionIds.includes(sessionId)
+      const pinned = state.pinnedSessionIds.includes(sessionId)
+      if (archived || pinned) {
+        await this.setState({
+          ...state,
+          archivedSessionIds: state.archivedSessionIds.filter(id => id !== sessionId),
+          pinnedSessionIds: state.pinnedSessionIds.filter(id => id !== sessionId),
+        })
+      }
+      this.headers.delete(sessionId)
+      this.sessionPaths.delete(sessionId)
+      this.missingSessionPaths.delete(sessionId)
+      this.invalidSessionPaths.delete(sessionId)
+    })
+  }
+
+  /**
    * Whether a session is live, header-indexed, or present in a fresh
    * persistence listing. Only a definite miss returns false — a failing
    * `sessionPersistence.list()` propagates so storage faults never
@@ -478,8 +512,14 @@ export class WorkspaceRegistry extends Service {
     return this.headers.has(id)
   }
 
-  /** Request every provider's stop; a failing provider is logged, never a reason to keep the session visible. */
-  private async stopSessionActivity(sessionId: SessionId): Promise<void> {
+  /**
+   * Request every provider's stop for one Session without archiving it; a
+   * failing provider is logged, never a reason to keep the Session visible.
+   * Deletion uses this after the archive gate is already in place, and archive
+   * uses it as the second half of `stopActivity`.
+   * @param sessionId - the Session whose running work is stopped.
+   */
+  async stopSessionActivity(sessionId: SessionId): Promise<void> {
     try {
       await this.ctx.parallel('workspace/session-stop', { sessionId })
     } catch (error: unknown) {
@@ -487,7 +527,7 @@ export class WorkspaceRegistry extends Service {
       /* v8 ignore next -- the plain arm guards a rethrowing dispatcher. */
       const failures = error instanceof AggregateError ? error.errors : [error]
       for (const failure of failures) {
-        this.ctx.logger.warn(`workspace: stopping session '${sessionId}' for archive failed: ${String(failure)}`)
+        this.ctx.logger.warn(`workspace: stopping session '${sessionId}' failed: ${String(failure)}`)
       }
     }
   }

@@ -11,7 +11,7 @@ import type { SessionId, SessionSeqCursor } from '@deepseek-ai/dsh-session/types
 import type { SessionProjectionMap } from '@deepseek-ai/dsh-session-projection/types'
 import type { Principal } from '@deepseek-ai/dsh-typert-protocol'
 import type { JsonValue } from '@deepseek-ai/dsh-util-values'
-import type { WorkspaceId } from '@deepseek-ai/dsh-workspace/types'
+import type { SessionActivity, WorkspaceId } from '@deepseek-ai/dsh-workspace/types'
 
 declare module '@deepseek-ai/dsh-session-projection/types' {
   interface SessionProjectionStateMap {
@@ -227,6 +227,10 @@ declare module '@deepseek-ai/dsh-typert-protocol' {
     'session/title-invalid': { readonly sessionId: SessionId }
     'session/fork-unavailable': { readonly sessionId: SessionId }
     'session/migration-required': { readonly sessionId: SessionId }
+    /** The Session's Agent belongs to another owner, so deletion cannot dispose it. */
+    'session/live': { readonly sessionId: SessionId }
+    /** Deletion found running work and was not asked to stop it; `activity` names what runs. */
+    'session/active': { readonly sessionId: SessionId; readonly activity: readonly SessionActivity[] }
     'subagent/not-found': {
       readonly parentSessionId: SessionId
       readonly childSessionId: SessionId
@@ -324,6 +328,21 @@ export interface SessionRenameRequest {
 export interface SessionRenameValue {
   readonly title: string
   readonly seq: number
+}
+
+/** Permanent Session deletion request. */
+export interface SessionDeleteRequest {
+  readonly sessionId: SessionId
+  /**
+   * Stop the Session's running work and dispose the Agent it runs on before
+   * removing the log. Omitted, a Session with running work is refused.
+   */
+  readonly stopActivity?: boolean
+}
+
+/** Acknowledgement of one permanent Session deletion. */
+export interface SessionDeleteValue {
+  readonly deleted: true
 }
 
 /** Session fork request. */

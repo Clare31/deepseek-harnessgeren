@@ -458,6 +458,20 @@ export class JsonlBackendTracker {
   }
 
   /**
+   * Whether any reader, writer, or created-but-unmaterialized session still
+   * binds this id in this process.
+   * @param id - the session to test.
+   * @returns true while a handle or pending create references the id.
+   */
+  hasHandle(id: SessionId): boolean {
+    if (this.pending.has(id)) return true
+    for (const handle of this.openHandles) {
+      if (handle.id === id) return true
+    }
+    return false
+  }
+
+  /**
    * Iterate the pending sessions for listing.
    * @returns the pending entries, keyed by session id.
    */
