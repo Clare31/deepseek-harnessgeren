@@ -26,7 +26,8 @@ describe('desktop package target', () => {
   })
 
   it('rejects unsupported targets and hosts before building', () => {
-    expect(() => resolveDesktopPackageTarget('linux-x64', 'linux', 'x64')).toThrow(/unsupported target/u)
+    expect(() => resolveDesktopPackageTarget('linux-ppc64', 'linux', 'ppc64')).toThrow(/unsupported target/u)
+    expect(() => resolveDesktopPackageTarget('linux-x64', 'linux', 'arm64')).toThrow(/Linux x64/u)
     expect(() => resolveDesktopPackageTarget('win-x64', 'darwin', 'arm64')).toThrow(/Windows x64/u)
     expect(() => resolveDesktopPackageTarget('mac-arm64', 'darwin', 'x64')).toThrow(/Apple Silicon/u)
     expect(() => resolveDesktopPackageTarget('mac-arm64', 'linux', 'arm64')).toThrow(/macOS/u)
@@ -42,6 +43,16 @@ describe('desktop package target', () => {
     expect(parseDesktopPackageInvocation(['win-x64', '--check', '--unsigned'], 'win32', 'x64')).toMatchObject({ check: true, unsigned: true })
     expect(() => parseDesktopPackageInvocation(['mac-arm64', 'mac-x64'], 'darwin', 'arm64'))
       .toThrow(/at most one target/u)
+  })
+
+  it('opts Linux packages into a public GitHub feed without changing ordinary local builds', () => {
+    expect(parseDesktopPackageInvocation(['linux-x64', '--unsigned'], 'linux', 'x64').githubRepository).toBeUndefined()
+    expect(parseDesktopPackageInvocation(['linux-x64', '--unsigned', '--github-repository', 'owner/repo'], 'linux', 'x64'))
+      .toMatchObject({ githubRepository: 'owner/repo', target: { platform: 'linux', arch: 'x64' } })
+    expect(() => parseDesktopPackageInvocation(['linux-x64', '--unsigned', '--github-repository', 'invalid'], 'linux', 'x64'))
+      .toThrow(/owner\/repository/u)
+    expect(() => parseDesktopPackageInvocation(['mac-arm64', '--unsigned', '--github-repository', 'owner/repo'], 'darwin', 'arm64'))
+      .toThrow(/Linux/u)
   })
 
   it('parses a build version, including the separator a pnpm run script forwards', () => {

@@ -1,6 +1,20 @@
 /** Environment variable that selects the Desktop update deployment. */
 export const DESKTOP_AUTO_UPDATE_ENV: 'DSH_DESKTOP_AUTO_UPDATE_ENV'
 
+/**
+ * Select a public stable GitHub Releases feed for an opted-in Linux package.
+ * @param repository GitHub owner/repository; omitted disables the feed.
+ * @param platform Target platform, which must be Linux when opting in.
+ * @returns Credential-free publication settings or no update source.
+ */
+export function resolveLinuxGitHubUpdateConfig(repository: string | undefined, platform: NodeJS.Platform): {
+  provider: 'github'
+  owner: string
+  repo: string
+  channel: 'latest'
+  releaseType: 'release'
+} | undefined
+
 /** Supported Desktop update deployment. */
 export type DesktopAutoUpdateEnvironment = 'test' | 'production'
 

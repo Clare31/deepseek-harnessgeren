@@ -6,6 +6,20 @@ import { valid } from 'semver'
 export const DESKTOP_AUTO_UPDATE_ENV = 'DSH_DESKTOP_AUTO_UPDATE_ENV'
 
 /**
+ * Select a public GitHub Releases feed for an explicitly opted-in Linux package.
+ * @param {string | undefined} repository GitHub owner/repository; omitted leaves local updates disabled.
+ * @param {NodeJS.Platform} platform Target platform, which must be Linux when a repository is supplied.
+ * @returns {{ provider: 'github', owner: string, repo: string, channel: 'latest', releaseType: 'release' } | undefined} Stable-release source without credentials.
+ */
+export function resolveLinuxGitHubUpdateConfig(repository, platform) {
+  if (repository === undefined) return undefined
+  if (platform !== 'linux') throw new Error('desktop GitHub updates: supported only for Linux packages')
+  const match = /^([a-zA-Z0-9][a-zA-Z0-9-]{0,38})\/([a-zA-Z0-9][a-zA-Z0-9._-]{0,99})$/u.exec(repository)
+  if (match === null) throw new Error('desktop GitHub updates: expected owner/repository without a URL or credentials')
+  return { provider: 'github', owner: match[1], repo: match[2], channel: 'latest', releaseType: 'release' }
+}
+
+/**
  * Resolve the channel embedded in the installer; omitted local settings retain nightly.
  * @param {NodeJS.ProcessEnv} env Packaging or upload settings.
  * @returns {'nightly' | 'latest'} Validated channel.

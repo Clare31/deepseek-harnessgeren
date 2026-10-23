@@ -41,6 +41,7 @@
     "package:win:x64:unsigned": "tsx scripts/package-target.ts win-x64 --unsigned",
     "package:win:x64:dir": "tsx scripts/package-target.ts win-x64 --dir",
     "package:linux:x64:unsigned": "tsx scripts/package-target.ts linux-x64 --unsigned",
+    "package:linux:x64:github": "tsx scripts/package-target.ts linux-x64 --unsigned --github-repository Clare31/deepseek-harnessgeren",
     "package:linux:x64:dir": "tsx scripts/package-target.ts linux-x64 --unsigned --dir",
     "package:linux:arm64:unsigned": "tsx scripts/package-target.ts linux-arm64 --unsigned",
     "package:linux:arm64:dir": "tsx scripts/package-target.ts linux-arm64 --unsigned --dir",

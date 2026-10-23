@@ -7,6 +7,7 @@ import { join, resolve } from 'node:path'
 import {
   desktopBuildRecordFilename,
   resolveDesktopAutoUpdateConfig,
+  resolveLinuxGitHubUpdateConfig,
 } from './desktop-auto-update-environment.mjs'
 import { desktopArtifactOutput, desktopTargetBuildPaths } from './desktop-build-paths.mjs'
 import type { DesktopAutoUpdateTarget } from './desktop-auto-update-environment.mjs'
@@ -220,6 +221,8 @@ interface DesktopPackageInvocation {
   readonly check: boolean
   /** Build identifier to publish under, when this build does not publish the product version. */
   readonly requestedBuildVersion: string | undefined
+  /** Public GitHub owner/repository for Linux updates; omitted keeps local updates disabled. */
+  readonly githubRepository: string | undefined
 }
 
 function hostTargetName(platform: NodeJS.Platform, arch: string): DesktopPackageTargetName {
@@ -252,12 +255,13 @@ export function parseDesktopPackageInvocation(
       'skip-notarization': { type: 'boolean', default: false },
       check: { type: 'boolean', default: false },
       'build-version': { type: 'string' },
+      'github-repository': { type: 'string' },
     },
   })
   if (positionals.length > 1) throw new Error('desktop package: expected at most one target')
   const name = positionals[0] ?? hostTargetName(hostPlatform, hostArch)
   if (values.unsigned && values['prepare-only']) throw new Error('desktop package: --unsigned cannot use --prepare-only')
-  // Linux has no release signing, notarization, or update feed yet; only local unsigned builds are supported.
+  // Linux packages have no release signing or notarization.
   if (name.startsWith('linux-') && !values.unsigned && !values['prepare-only']) {
     throw new Error('desktop package: Linux targets support only --unsigned local builds')
   }
@@ -268,14 +272,17 @@ export function parseDesktopPackageInvocation(
   if (values['build-version'] !== undefined && (requestedBuildVersion === undefined || requestedBuildVersion === '')) {
     throw new Error('desktop package: --build-version requires a value')
   }
+  const target = resolveDesktopPackageTarget(name, hostPlatform, hostArch)
+  resolveLinuxGitHubUpdateConfig(values['github-repository'], target.platform)
   return {
-    target: resolveDesktopPackageTarget(name, hostPlatform, hostArch),
+    target,
     directory: values.dir,
     prepareOnly: values['prepare-only'],
     unsigned: values.unsigned,
     skipNotarization: values['skip-notarization'],
     check: values.check,
     requestedBuildVersion,
+    githubRepository: values['github-repository'],
   }
 }
 
@@ -372,6 +379,7 @@ async function main(): Promise<void> {
       unsigned: invocation.unsigned, prepareOnly: invocation.prepareOnly,
     })
   const productVersion = packageVersion(join(APP_ROOT, 'package.json'), 'desktop package')
+  if (invocation.githubRepository !== undefined) environment.DSH_DESKTOP_GITHUB_UPDATE_REPOSITORY = invocation.githubRepository
   // Release settings come from the selected configuration files, so the version this run publishes is an
   // argument; the environment variable below only carries it to the child processes that build.
   const buildVersion = await resolveRequestedBuildVersion(invocation, productVersion, environment)

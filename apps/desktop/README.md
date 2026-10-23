@@ -290,6 +290,14 @@ The Linux package disables asar so that `@deepseek-ai/libreoffice-kit` can fall 
 
 Launch verification uses isolated Harness and Electron data and brings its visible renderer page to the foreground before capturing it. This requires an interactive desktop; a hidden window on Wayland cannot provide screenshot evidence. Only the verification instance is stopped afterward.
 
+### GitHub Releases updates on Linux
+
+Run `pnpm --dir apps/desktop run package:linux:x64:github` from the repository root to build a Linux x64 package that checks public stable releases in `Clare31/deepseek-harnessgeren`. The ordinary unsigned command retains no update source. Other public repositories can be selected with `pnpm --dir apps/desktop exec tsx scripts/package-target.ts linux-x64 --unsigned --github-repository OWNER/REPOSITORY`.
+
+The GitHub build includes `app-update.yml`, Debian package identification, and a `latest-linux.yml` feed beside the artifacts. Publish the feed and the files it references together in a public, non-draft, non-prerelease GitHub Release tagged `v<version>`. A subsequent release must declare a higher stable semantic version. The initial installed package may be a prerelease, but this update source offers stable versions only. Pushing source commits alone does not create an update; this command neither uploads artifacts nor creates Releases.
+
+The existing Desktop update indicator checks the packaged repository and requests confirmation before downloading and again before installation. Debian package installation may request system authorization. Automatic checks do not install packages or stop tasks. A private repository or an unpublished feed cannot provide credential-free updates, and network failures leave the installed application in place.
+
 ## Updates
 
 On Windows, the downloaded-update confirmation explains that the application closes during installation, reopens automatically, and should not be launched again while updating. An installer restart carrying `--updated` raises and focuses the main window once when startup opens the workspace directly, without enabling always-on-top. Startup into the welcome page discards that request so a later login keeps its normal activation behavior. Ordinary launches and other platforms do not use this foregrounding step.

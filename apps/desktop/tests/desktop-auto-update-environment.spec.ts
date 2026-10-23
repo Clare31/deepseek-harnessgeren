@@ -6,9 +6,31 @@ import {
   resolveDesktopAutoUpdateEnvironment,
   resolveDesktopAutoUpdateTarget,
   resolveDesktopUploadConfig,
+  resolveLinuxGitHubUpdateConfig,
 } from '../scripts/desktop-auto-update-environment.mjs'
 
 const RELEASE_ID = '0123456789abcdef0123456789abcdef'
+
+describe('Linux GitHub update source', () => {
+  it('leaves ordinary local builds without an update source', () => {
+    expect(resolveLinuxGitHubUpdateConfig(undefined, 'linux')).toBeUndefined()
+  })
+
+  it('selects public stable releases from the requested repository', () => {
+    expect(resolveLinuxGitHubUpdateConfig('Clare31/deepseek-harnessgeren', 'linux')).toEqual({
+      provider: 'github', owner: 'Clare31', repo: 'deepseek-harnessgeren', channel: 'latest', releaseType: 'release',
+    })
+  })
+
+  it.each(['', ' ', 'https://github.com/owner/repo', 'owner/repo/extra', 'owner/..', 'owner/repo?token=value'])
+  ('rejects invalid repository %j', (repository) => {
+    expect(() => resolveLinuxGitHubUpdateConfig(repository, 'linux')).toThrow(/owner\/repository/u)
+  })
+
+  it('refuses to change another platform update source', () => {
+    expect(() => resolveLinuxGitHubUpdateConfig('owner/repo', 'darwin')).toThrow(/Linux/u)
+  })
+})
 
 describe('desktop auto-update environment', () => {
   it.each([undefined, 'test'])('requires a release ID for deployment %s', (deployment) => {

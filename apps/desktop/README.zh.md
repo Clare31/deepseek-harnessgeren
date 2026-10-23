@@ -290,6 +290,14 @@ Linux 打包关闭 asar，使 `@deepseek-ai/libreoffice-kit` 能回退到其 WAS
 
 启动验证使用隔离的 Harness 与 Electron 数据，并在截图前将可见渲染页面前置。这需要交互式桌面；Wayland 下的隐藏窗口无法提供截图证据。验证结束后只停止验证实例。
 
+### Linux 的 GitHub Releases 更新
+
+在仓库根目录运行 `pnpm --dir apps/desktop run package:linux:x64:github`，可构建检查 `Clare31/deepseek-harnessgeren` 公开正式版本的 Linux x64 安装包。普通 unsigned 命令仍不配置更新源。其他公开仓库可通过 `pnpm --dir apps/desktop exec tsx scripts/package-target.ts linux-x64 --unsigned --github-repository OWNER/REPOSITORY` 选择。
+
+GitHub 构建包含 `app-update.yml`、Debian 包标识，以及产物旁的 `latest-linux.yml` 更新清单。将清单和它引用的文件一起发布到公开、非草稿、非预发布的 GitHub Release，标签为 `v<version>`。后续版本必须使用更高的正式语义版本号。首次安装的包可以是预发布版本，但此更新源只提供正式版本。仅推送源码提交不会生成更新；此命令不上传产物，也不创建 Release。
+
+现有 Desktop 更新指示器检查包内配置的仓库，并在下载前和安装前分别请求确认。Debian 包安装可能请求系统授权。自动检查不会安装软件或停止任务。私有仓库或尚未发布的清单无法提供免凭据更新，网络失败会保留已安装应用。
+
 ## 更新
 
 Windows 下载完成后的更新确认说明应用会在安装期间关闭、完成后自动打开，并提示期间不要重复启动。安装器携带 `--updated` 重启应用并直接打开工作区时，壳会将主窗口前置并聚焦一次，不启用永久置顶。启动进入欢迎页时会清除此请求，使后续登录保留正常的激活行为。普通启动和其他平台不执行此前置步骤。
