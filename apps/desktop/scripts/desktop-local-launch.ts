@@ -203,6 +203,8 @@ async function captureScreenshot(webSocketUrl: string, path: string): Promise<nu
       reject(new Error('desktop local launch: screenshot timed out'))
     }, 30_000)
     socket.addEventListener('open', () => {
+      // Wayland may report a visible document before its window produces a capturable frame.
+      socket.send(JSON.stringify({ id: 2, method: 'Page.bringToFront' }))
       socket.send(JSON.stringify({ id: 1, method: 'Page.captureScreenshot', params: { format: 'png' } }))
     })
     socket.addEventListener('message', (event) => {

@@ -288,6 +288,8 @@ Rollback switches the program version only. It does not downgrade data: a data d
 
 The Linux package disables asar so that `@deepseek-ai/libreoffice-kit` can fall back to its WASM engine; the packaged smoke test converts DOCX, XLSX, and PPTX to PDF.
 
+Launch verification uses isolated Harness and Electron data and brings its visible renderer page to the foreground before capturing it. This requires an interactive desktop; a hidden window on Wayland cannot provide screenshot evidence. Only the verification instance is stopped afterward.
+
 ## Updates
 
 On Windows, the downloaded-update confirmation explains that the application closes during installation, reopens automatically, and should not be launched again while updating. An installer restart carrying `--updated` raises and focuses the main window once when startup opens the workspace directly, without enabling always-on-top. Startup into the welcome page discards that request so a later login keeps its normal activation behavior. Ordinary launches and other platforms do not use this foregrounding step.
