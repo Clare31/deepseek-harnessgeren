@@ -292,6 +292,8 @@ Linux 打包关闭 asar，使 `@deepseek-ai/libreoffice-kit` 能回退到其 WAS
 
 ### Linux 的 GitHub Releases 更新
 
+Linux 安装包的应用启动器与内置窗口图标使用 `resources/icon-linux.png` 中的兔子图案。
+
 在仓库根目录运行 `pnpm --dir apps/desktop run package:linux:x64:github`，可构建检查 `Clare31/deepseek-harnessgeren` 公开正式版本的 Linux x64 安装包。普通 unsigned 命令仍不配置更新源。其他公开仓库可通过 `pnpm --dir apps/desktop exec tsx scripts/package-target.ts linux-x64 --unsigned --github-repository OWNER/REPOSITORY` 选择。
 
 GitHub 构建包含 `app-update.yml`、Debian 包标识，以及产物旁的 `latest-linux.yml` 更新清单。将清单和它引用的文件一起发布到公开、非草稿、非预发布的 GitHub Release，标签为 `v<version>`。后续版本必须使用更高的正式语义版本号。首次安装的包可以是预发布版本，但此更新源只提供正式版本。仅推送源码提交不会生成更新；此命令不上传产物，也不创建 Release。

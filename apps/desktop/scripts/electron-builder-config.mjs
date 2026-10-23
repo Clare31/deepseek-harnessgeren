@@ -156,7 +156,7 @@ export function createElectronBuilderConfig(
     asarUnpack: unpack,
     extraResources: [
       { from: buildPaths.runtime, to: 'runtime' },
-      { from: fileURLToPath(new URL('../resources/icon-windows.png', import.meta.url)), to: 'icon.png' },
+      { from: fileURLToPath(new URL(packagesLinux ? '../resources/icon-linux.png' : '../resources/icon-windows.png', import.meta.url)), to: 'icon.png' },
       // Windows tray bitmaps; macOS keeps the Dock and ships no menu bar icon.
       ...(packagesWindows ? [{ from: fileURLToPath(new URL('../resources/tray-windows.ico', import.meta.url)), to: 'tray.ico' }] : []),
     ],
@@ -250,7 +250,7 @@ export function createElectronBuilderConfig(
       target: ['nsis'],
     },
     linux: {
-      icon: fileURLToPath(new URL('../resources/icon.png', import.meta.url)),
+      icon: fileURLToPath(new URL('../resources/icon-linux.png', import.meta.url)),
       // The terminal launcher in cli/dsh expects this executable beside the resources directory.
       executableName: 'deepseek-harness',
       maintainer: 'DeepSeek Harness contributors <dsh@localhost>',

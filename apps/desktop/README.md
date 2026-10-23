@@ -292,6 +292,8 @@ Launch verification uses isolated Harness and Electron data and brings its visib
 
 ### GitHub Releases updates on Linux
 
+Linux packages use the rabbit artwork in `resources/icon-linux.png` for their application launcher and bundled window icon.
+
 Run `pnpm --dir apps/desktop run package:linux:x64:github` from the repository root to build a Linux x64 package that checks public stable releases in `Clare31/deepseek-harnessgeren`. The ordinary unsigned command retains no update source. Other public repositories can be selected with `pnpm --dir apps/desktop exec tsx scripts/package-target.ts linux-x64 --unsigned --github-repository OWNER/REPOSITORY`.
 
 The GitHub build includes `app-update.yml`, Debian package identification, and a `latest-linux.yml` feed beside the artifacts. Publish the feed and the files it references together in a public, non-draft, non-prerelease GitHub Release tagged `v<version>`. A subsequent release must declare a higher stable semantic version. The initial installed package may be a prerelease, but this update source offers stable versions only. Pushing source commits alone does not create an update; this command neither uploads artifacts nor creates Releases.
