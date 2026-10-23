@@ -250,7 +250,7 @@ export function createElectronBuilderConfig(
       target: ['nsis'],
     },
     linux: {
-      icon: fileURLToPath(new URL('../resources/icon-linux.png', import.meta.url)),
+      icon: fileURLToPath(new URL('../resources/icon-linux-launcher.png', import.meta.url)),
       // The terminal launcher in cli/dsh expects this executable beside the resources directory.
       executableName: 'deepseek-harness',
       maintainer: 'DeepSeek Harness contributors <dsh@localhost>',

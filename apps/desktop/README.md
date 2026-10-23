@@ -292,7 +292,7 @@ Launch verification uses isolated Harness and Electron data and brings its visib
 
 ### GitHub Releases updates on Linux
 
-Linux packages use the rabbit artwork in `resources/icon-linux.png` for their application launcher and bundled window icon.
+Linux packages use the rabbit artwork in `resources/icon-linux.png` for their bundled window icon. Run `pnpm --dir apps/desktop run render:linux-icon` to generate `resources/icon-linux-launcher.png` at the standard 512×512 size for application menus after replacing the artwork.
 
 Run `pnpm --dir apps/desktop run package:linux:x64:github` from the repository root to build a Linux x64 package that checks public stable releases in `Clare31/deepseek-harnessgeren`. The ordinary unsigned command retains no update source. Other public repositories can be selected with `pnpm --dir apps/desktop exec tsx scripts/package-target.ts linux-x64 --unsigned --github-repository OWNER/REPOSITORY`.
 
