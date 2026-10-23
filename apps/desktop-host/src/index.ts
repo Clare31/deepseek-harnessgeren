@@ -13,7 +13,7 @@ import * as desktopOffice from './office.ts'
 import { installDesktopUpdateTaskControl } from './update-tasks.ts'
 import { installDesktopQuitInspection } from './quit-inspection.ts'
 import { installPlatformSessionPublisher } from './platform-session.ts'
-import { installOfficeEngineResolution } from './office-engine.ts'
+import { installOfficeEngineResolution, runtimeResourcesDirectory } from './office-engine.ts'
 
 async function main(): Promise<void> {
   const runtimeDir = process.argv[2] as string
@@ -94,7 +94,7 @@ async function main(): Promise<void> {
   control.quitInspection = installDesktopQuitInspection(ctx)
   await ctx.plugin(desktopOffice, {
     runtimeDir,
-    source: process.argv[4] ?? join(runtimeDir, '..', 'runtime', 'primary-runtime'),
+    source: process.argv[4] ?? join(runtimeResourcesDirectory(runtimeDir), 'runtime', 'primary-runtime'),
     root: join(resolveDshHome(), 'dsh-runtimes', 'dsh-primary-runtime'),
   })
   installPlatformSessionPublisher(ctx, (session) => {

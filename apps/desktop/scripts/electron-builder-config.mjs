@@ -118,7 +118,9 @@ export function createElectronBuilderConfig(
     // Unsigned builds carry their own suffix so a shared file can never pass for a release artifact.
     artifactName: `deepseek-harness-\${version}-\${os}-\${arch}${output.suffix}.\${ext}`,
     directories: { output: output.directory },
-    asar: true,
+    // Linux ships the application unpacked under resources/app: Electron's asar patch reports absent paths as present,
+    // which makes @deepseek-ai/libreoffice-kit treat a missing native engine as incomplete instead of using WASM.
+    asar: !packagesLinux,
     electronDist: buildPaths.electron,
     electronFuses: { runAsNode: true },
     beforeBuild: async () => {

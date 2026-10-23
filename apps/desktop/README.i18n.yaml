@@ -12,8 +12,8 @@
   en: 7bc8bf30de693222
   zh: e85993d8852b6cab
 /deepseek-harness-desktop/table-of-contents:
-  en: 05fd227f99ee535a
-  zh: 60d7d62bc0026973
+  en: bb37b70c6fa535b8
+  zh: c99ebcb6613d4cab
 /deepseek-harness-desktop/application-overview:
   en: e9b22f232837e131
   zh: fc5f3834b969d2d2
@@ -56,6 +56,9 @@
 /deepseek-harness-desktop/windows-installer-interface:
   en: 8cb4b7babbd8714d
   zh: b4aebc1d2d152e01
+/deepseek-harness-desktop/linux-local-daily-build:
+  en: f4531f926c98f9ef
+  zh: 22b4d34fd967ddc7
 /deepseek-harness-desktop/updates:
   en: 4788b6b60489ef92
   zh: 6312c5590efa27f1

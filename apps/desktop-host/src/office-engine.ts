@@ -15,6 +15,21 @@ export function runtimeArchivePath(runtimeDir: string): string | undefined {
 }
 
 /**
+ * Locate the packaged resources directory that holds the `runtime` sibling of a dsh runtime.
+ * An unpacked Linux application keeps dsh at `resources/app/dsh`; an archived one at `resources/app.asar/dsh`.
+ * @param runtimeDir - Prepared, ASAR-contained, or unpacked dsh runtime directory.
+ * @returns Resources directory for archived and unpacked packages, otherwise the runtime's parent directory.
+ */
+export function runtimeResourcesDirectory(runtimeDir: string): string {
+  const archive = runtimeArchivePath(runtimeDir)
+  if (archive !== undefined) return dirname(archive)
+  const application = dirname(runtimeDir)
+  return basename(application) === 'app' && basename(dirname(application)) === 'resources'
+    ? dirname(application)
+    : application
+}
+
+/**
  * Keep engine executable and resource paths usable by native child processes outside Electron.
  * Hooks apply only to this thread; worker threads must install their own resolver.
  * @param runtimeDir - Prepared or ASAR-contained dsh runtime directory.

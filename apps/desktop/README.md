@@ -21,6 +21,7 @@ Desktop runs the Harness workspace in a native application. This reference cover
 - [Develop](#develop)
 - [Package](#package)
 - [Windows installer interface](#windows-installer-interface)
+- [Linux local daily build](#linux-local-daily-build)
 - [Updates](#updates)
 - [Low-level development overrides](#low-level-development-overrides)
 - [Known limitations](#known-limitations)
@@ -262,6 +263,30 @@ The Windows uninstaller removes the Electron user-data directory (browser storag
 Use `node apps/desktop/scripts/test-windows-installer.mjs --uninstall-only --compile-only` to compile isolated English and Chinese fixtures with a per-run scoped package name. Omit `--compile-only` to run the native remover regression and the interactive, silent, `--updated`, `/KEEP_APP_DATA` and `DSH_HOME`-inside-Electron-data checks against seeded data. Compilation does not establish installed-uninstall behavior.
 
 <a id="updates"></a>
+
+## Linux local daily build
+
+Linux has two local launchers. `DeepSeek Harness (日常版)` runs the last verified build installed by `desktop:update:local`; it does not depend on a browser or a running terminal. `DeepSeek Harness (开发版)` runs `pnpm run dev:desktop` from the working tree and is the target for checks after source changes.
+
+Run these from the repository root:
+
+- `pnpm run desktop:update:local` verifies the working tree against `origin/linux-desktop`, builds the unpacked package, checks it, stages it, installs it, and launch-verifies it in isolated data.
+- `pnpm run desktop:status:local` prints the current and previous versions, running instances, remote and local heads, and launcher presence.
+- `pnpm run desktop:rollback:local` moves the daily link to the previous retained version.
+- `pnpm run desktop:launch:local` starts the current daily build.
+
+The update installs only a clean working tree whose `HEAD` equals `origin/linux-desktop` on the `linux-desktop` branch of `Clare31/deepseek-harnessgeren`. It never terminates a process. A running daily instance keeps its version directory, which pruning skips, and it uses the new build after you restart it through the application. A failure at any stage leaves the `current` link and the daily launcher on the previous version.
+
+Installed layout (user-owned, no `sudo`):
+
+- Program versions: `~/.local/opt/deepseek-harness/versions/<commit12>-<timestamp>`, linked by `current` and `previous`.
+- Update state, lock, journal, and verification evidence: `~/.local/state/deepseek-harness`.
+- Backups taken before each install: `~/.local/state/deepseek-harness/backups`.
+- Daily data, unchanged by updates: `~/.dsh` and `~/.config/@deepseek-ai/dsh-desktop`. Dev data is never copied into the daily data directories.
+
+Rollback switches the program version only. It does not downgrade data: a data directory that a newer build has written may not open correctly in an older build. Restore from `backups/<stamp>` when that is required.
+
+The Linux package disables asar so that `@deepseek-ai/libreoffice-kit` can fall back to its WASM engine; the packaged smoke test converts DOCX, XLSX, and PPTX to PDF.
 
 ## Updates
 

@@ -3,7 +3,7 @@ import { createRequire, type ModuleHooks } from 'node:module'
 import { tmpdir } from 'node:os'
 import { dirname, join, sep } from 'node:path'
 import { afterEach, expect, it } from 'vitest'
-import { installOfficeEngineResolution } from '../src/office-engine.ts'
+import { installOfficeEngineResolution, runtimeResourcesDirectory } from '../src/office-engine.ts'
 import { PackageManifests } from '../../../packages/boot/hmr/src/package-manifest.ts'
 
 const roots: string[] = []
@@ -136,4 +136,10 @@ it('leaves external engines and the archived WASM engine at their own locations'
     .toMatchObject({ path: realpathSync(dirname(external)) })
   expect(f.require('@deepseek-ai/libreoffice-kit-wasm/package.json'))
     .toMatchObject({ path: realpathSync(dirname(wasm)) })
+})
+
+it('resolves the resources directory for archived, unpacked, and prepared runtimes', () => {
+  expect(runtimeResourcesDirectory('/opt/app/resources/app.asar/dsh')).toBe('/opt/app/resources')
+  expect(runtimeResourcesDirectory('/opt/app/resources/app/dsh')).toBe('/opt/app/resources')
+  expect(runtimeResourcesDirectory('/work/targets/linux-x64/dsh')).toBe('/work/targets/linux-x64')
 })

@@ -21,6 +21,7 @@ Desktop 在原生应用中运行 Harness 工作区。本参考文档说明应用
 - [开发](#develop)
 - [打包](#package)
 - [Windows 安装界面](#windows-installer-interface)
+- [Linux 本地日常版](#linux-local-daily-build)
 - [更新](#updates)
 - [底层开发覆盖项](#low-level-development-overrides)
 - [已知限制](#known-limitations)
@@ -262,6 +263,30 @@ Windows 卸载程序会随应用一起删除 Electron 用户数据目录（`%APP
 使用 `node apps/desktop/scripts/test-windows-installer.mjs --uninstall-only --compile-only` 以每次运行唯一的带作用域包名编译独立的中英文夹具。省略 `--compile-only` 可对预置数据运行原生删除器回归，以及交互、静默、`--updated`、`/KEEP_APP_DATA` 和 `DSH_HOME` 位于 Electron 数据内的检查。编译本身不能证明已安装卸载行为。
 
 <a id="updates"></a>
+
+## Linux 本地日常版
+
+Linux 提供两个本地启动器。`DeepSeek Harness (日常版)` 运行 `desktop:update:local` 安装的最近一次已验证构建，不依赖浏览器或正在运行的终端。`DeepSeek Harness (开发版)` 从工作树运行 `pnpm run dev:desktop`，用于源码修改后的检查。
+
+在仓库根目录运行：
+
+- `pnpm run desktop:update:local` 对照 `origin/linux-desktop` 校验工作树，构建解包版，检查、暂存、安装，并在隔离数据中做启动验证。
+- `pnpm run desktop:status:local` 输出当前与上一版本、运行中的实例、远端与本地 head，以及启动器是否存在。
+- `pnpm run desktop:rollback:local` 把日常版链接切回上一保留版本。
+- `pnpm run desktop:launch:local` 启动当前日常版。
+
+更新只安装干净工作树、且 `HEAD` 等于 `Clare31/deepseek-harnessgeren` 的 `linux-desktop` 分支 `origin/linux-desktop` 的构建。更新从不终止进程。正在运行的日常版实例保留其版本目录（清理时会跳过该目录），重启应用后才使用新构建。任一阶段失败，`current` 链接与日常启动器都保持在上一版本。
+
+安装布局（归用户所有，无需 `sudo`）：
+
+- 程序版本：`~/.local/opt/deepseek-harness/versions/<commit12>-<timestamp>`，由 `current` 与 `previous` 链接。
+- 更新状态、锁、日志与验证证据：`~/.local/state/deepseek-harness`。
+- 每次安装前的备份：`~/.local/state/deepseek-harness/backups`。
+- 日常数据，更新不改动：`~/.dsh` 与 `~/.config/@deepseek-ai/dsh-desktop`。开发数据从不复制到日常数据目录。
+
+回滚只切换程序版本，不降级数据。新版本写过的数据目录可能无法被旧版本正确打开；需要时从 `backups/<stamp>` 恢复。
+
+Linux 打包关闭 asar，使 `@deepseek-ai/libreoffice-kit` 能回退到其 WASM 引擎；打包 smoke 测试会把 DOCX、XLSX、PPTX 转换为 PDF。
 
 ## 更新
 
