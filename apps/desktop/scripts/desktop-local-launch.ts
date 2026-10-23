@@ -163,10 +163,35 @@ async function findPage(port: number): Promise<(DevToolsTarget & { webSocketDebu
     // The endpoint is not listening until Electron finishes starting; the caller retries.
     return undefined
   }
-  return targets.find((target): target is DevToolsTarget & { webSocketDebuggerUrl: string } => target.type === 'page'
+  const candidates = targets.filter((target): target is DevToolsTarget & { webSocketDebuggerUrl: string } => target.type === 'page'
     && target.webSocketDebuggerUrl !== undefined
     && target.url !== 'about:blank'
     && !target.url.startsWith('devtools://'))
+  // A hidden window never produces a frame, so Page.captureScreenshot would wait forever on it.
+  for (const candidate of candidates) {
+    if (await isVisiblePage(candidate.webSocketDebuggerUrl)) return candidate
+  }
+  return undefined
+}
+
+async function isVisiblePage(webSocketUrl: string): Promise<boolean> {
+  return new Promise<boolean>((resolvePromise) => {
+    const socket = new WebSocket(webSocketUrl)
+    const finish = (visible: boolean): void => {
+      clearTimeout(timer)
+      socket.close()
+      resolvePromise(visible)
+    }
+    const timer = setTimeout(() => { finish(false) }, 3_000)
+    socket.addEventListener('open', () => {
+      socket.send(JSON.stringify({ id: 1, method: 'Runtime.evaluate', params: { expression: 'document.visibilityState', returnByValue: true } }))
+    })
+    socket.addEventListener('message', (event) => {
+      const message = JSON.parse(String(event.data)) as { id?: number; result?: { result?: { value?: unknown } } }
+      if (message.id === 1) finish(message.result?.result?.value === 'visible')
+    })
+    socket.addEventListener('error', () => { finish(false) })
+  })
 }
 
 async function captureScreenshot(webSocketUrl: string, path: string): Promise<number> {
