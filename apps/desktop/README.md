@@ -292,7 +292,7 @@ Launch verification uses isolated Harness and Electron data and brings its visib
 
 ### GitHub Releases updates on Linux
 
-Linux packages use the rabbit artwork in `resources/icon-linux.png` for their bundled window icon. Run `pnpm --dir apps/desktop run render:linux-icon` to generate `resources/icon-linux-launcher.png` at the standard 512×512 size for application menus after replacing the artwork.
+Linux packages use the rounded rabbit artwork in `resources/icon-linux.png` for their bundled window icon, with transparent outer corners. Run `pnpm --dir apps/desktop run render:linux-icon` to generate `resources/icon-linux-launcher.png` at the standard 512×512 size for application menus after replacing the artwork. The packaged `desktopName`, launcher filename, and `StartupWMClass` share the `deepseek-harness` identity so Wayland and X11 docks associate running windows with the application icon; this does not change the application name or data paths.
 
 Run `pnpm --dir apps/desktop run package:linux:x64:github` from the repository root to build a Linux x64 package that checks public stable releases in `Clare31/deepseek-harnessgeren`. The ordinary unsigned command retains no update source. Other public repositories can be selected with `pnpm --dir apps/desktop exec tsx scripts/package-target.ts linux-x64 --unsigned --github-repository OWNER/REPOSITORY`.
 

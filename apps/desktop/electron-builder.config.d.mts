@@ -13,7 +13,7 @@ export interface DesktopElectronBuilderConfig {
     { readonly from: string, readonly to: 'dsh', readonly filter: readonly ['**/*'] },
     { readonly from: string, readonly to: 'dsh/node_modules', readonly filter: readonly ['**/*'] },
   ]
-  readonly extraMetadata: { readonly dshDesktopAppId: string; readonly dshDesktopUpdateChannel: 'nightly' | 'latest' }
+  readonly extraMetadata: { readonly dshDesktopAppId: string; readonly dshDesktopUpdateChannel: 'nightly' | 'latest'; readonly desktopName?: string }
   readonly asar: boolean
   readonly asarUnpack: readonly string[]
   readonly extraResources: readonly [

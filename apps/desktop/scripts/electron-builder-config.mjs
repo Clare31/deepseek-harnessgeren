@@ -110,6 +110,7 @@ export function createElectronBuilderConfig(
     protocols: [{ name: 'DeepSeek Harness', schemes: ['dsh'] }],
     extraMetadata: {
       dshDesktopAppId: appId,
+      ...(packagesLinux ? { desktopName: 'deepseek-harness.desktop' } : {}),
       dshDesktopUpdateChannel: githubUpdate?.channel ?? update?.channel ?? 'nightly',
       ...(policy === undefined ? {} : { dshMandatoryUpdatePolicy: policy }),
       ...buildVersion === productVersion ? {} : { version: buildVersion },
@@ -256,7 +257,8 @@ export function createElectronBuilderConfig(
       maintainer: 'DeepSeek Harness contributors <dsh@localhost>',
       category: 'Development',
       synopsis: 'DeepSeek Harness desktop agent',
-      desktop: { entry: { StartupWMClass: 'DeepSeek Harness' } },
+      syncDesktopName: true,
+      desktop: { entry: { StartupWMClass: 'deepseek-harness' } },
       target: ['AppImage', 'deb'],
     },
     deb: {

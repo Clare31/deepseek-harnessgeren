@@ -295,7 +295,7 @@ async function writeDailyEntry(layout: LocalInstallLayout, record: BuildRecord |
     execArguments: [],
     trailing: '%U',
     icon: join(layout.current, 'resources', 'icon.png'),
-    startupWMClass: 'DeepSeek Harness',
+    startupWMClass: 'deepseek-harness',
   }))
 }
 

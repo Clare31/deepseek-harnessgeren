@@ -4,6 +4,12 @@ import { createElectronBuilderConfig } from '../scripts/electron-builder-config.
 const environment = { DSH_DESKTOP_APP_ID: 'com.deepseek.harness', DSH_DESKTOP_UNSIGNED: '1' }
 
 describe('Linux GitHub package configuration', () => {
+  it('matches the Wayland app ID and X11 window class to the installed launcher', () => {
+    const config = createElectronBuilderConfig(environment, 'linux', 'x64')
+    expect(config.extraMetadata).toHaveProperty('desktopName', 'deepseek-harness.desktop')
+    expect(config.linux).toHaveProperty('syncDesktopName', true)
+    expect(config.linux).toHaveProperty('desktop.entry.StartupWMClass', 'deepseek-harness')
+  })
   it('embeds the stable channel and public repository for the existing update coordinator', () => {
     const config = createElectronBuilderConfig({ ...environment,
       DSH_DESKTOP_GITHUB_UPDATE_REPOSITORY: 'Clare31/deepseek-harnessgeren',
