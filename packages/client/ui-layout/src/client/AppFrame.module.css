@@ -107,6 +107,14 @@
   --dsh-frame-chrome-top: 0px;
 }
 
+:global(html[data-windows-titlebar][data-fullscreen]) .frame {
+  padding-top: 0;
+}
+
+:global(html[data-windows-titlebar][data-fullscreen]) .frame::before {
+  display: none;
+}
+
 :global([data-platform='darwin']) .sidebarCol {
   /* A blue wash over the top of the translucent tint, gone by a third of the
      column; a faint blue-grey-violet rises through the bottom third; and a

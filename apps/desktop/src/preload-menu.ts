@@ -17,6 +17,7 @@ export function installWindowsMenu(): { update(): void; dispose(): void } {
       height: var(--dsh-windows-titlebar-height); display: flex; align-items: center;
       font-family: var(--dsw-font-family); -webkit-app-region: no-drag; }
     [role=menubar] { display: flex; gap: 2px; }
+    :host-context(html[data-fullscreen]) { display: none; }
     button { height: 28px; padding: 0 10px; border: 0; border-radius: 6px;
       background: transparent; color: var(--dsw-alias-label-secondary);
       font: inherit; font-size: 14px; cursor: default; }

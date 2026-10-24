@@ -64,6 +64,12 @@ it('shares settings card materials and control sizes in both palettes', async ()
     await dialog.getByRole('button', { name: '通用设置', exact: true }).click()
     await dialog.getByRole('button', { name: label, exact: true }).click()
     await expect.poll(() => page.evaluate(() => document.body.hasAttribute('data-ds-dark-theme'))).toBe(palette === 'dark')
+    const canvas = {
+      background: await page.locator('body').evaluate(node => getComputedStyle(node).backgroundColor),
+      sidebar: await page.locator('[class*="sidebarCol"]').evaluate(node => getComputedStyle(node).backgroundColor),
+    }
+    if (palette === 'dark') expect(canvas).toEqual({ background: 'rgb(0, 0, 0)', sidebar: 'rgb(0, 0, 0)' })
+    else expect(canvas.background).toBe('rgb(255, 255, 255)')
     const selector = await appearance(dialog.getByRole('button', { name: '工作区内修改', exact: true }))
     expect(selector.radius).toBe('12px')
     expect((await appearance(dialog)).radius).toBe('28px')

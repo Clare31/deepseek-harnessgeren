@@ -14,9 +14,10 @@ const UI_EXPECTED = fileURLToPath(new URL('../../../snapshots/web/fresh-round-tr
 
 describe.skipIf(webSnapshotMode() === 'record')('web session replay', () => {
   it.each([{ name: 'Chromium', engine: chromium }, { name: 'WebKit', engine: webkit }])(
-    '$name restores an active stream, a completed turn, and a reopened session', async ({ engine }) => {
+    '$name restores an active stream and reopened session on the black canvas', async ({ engine }) => {
       const scaffold = await launchWebScaffold({ replayFixture: FIXTURE, compareReplaySession: 'read-only' })
       onTestFinished(() => scaffold.close())
+      await scaffold.ctx.settings.update('ui-theme', { preference: 'dark' })
       const release = Promise.withResolvers<undefined>()
       const reached = Promise.withResolvers<string>()
       let paused = false
@@ -63,6 +64,8 @@ describe.skipIf(webSnapshotMode() === 'record')('web session replay', () => {
       await page.reload()
       await page.getByText('DONE', { exact: true }).waitFor({ timeout: 15_000 })
       acknowledgeReloadConnectionLoss(tripwire, warningStart)
+      expect(await page.locator('body').evaluate(node => getComputedStyle(node).backgroundColor)).toBe('rgb(0, 0, 0)')
+      expect(await page.locator('[class*="sidebarCol"]').evaluate(node => getComputedStyle(node).backgroundColor)).toBe('rgb(0, 0, 0)')
       await compareOrRefreshGolden(UI_EXPECTED,
         await captureExpandedTurnProcessAria(page, '[class*="centerCol"]', scaffold.workspaceCwd), 'replay')
 

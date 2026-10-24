@@ -2,6 +2,7 @@
   - navigation "Session hierarchy": Use the bash tool to
   - text: Standard mode
   - button "More actions"
+  - button "Project and sources": workspace
   - button "Open right sidebar"
   - tablist:
     - tab "Chat" [selected]
