@@ -23,6 +23,8 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
      * the shell's fish fallback without replacing the surrounding controls.
      */
     'sidebar.brand.mark': { kind: 'single'; scope: 'root'; owner: SidebarBrandMarkOwnerProps }
+    /** Optional decorative artwork behind the sidebar header controls. */
+    'sidebar.brand.backdrop': { kind: 'single'; scope: 'root'; owner: Record<never, never> }
     /**
      * Brand name rendered beside the expanded mark. Declared by this
      * package's `sidebar` entry; the shell supplies a generic text fallback.
@@ -138,6 +140,7 @@ export type SidebarRootComponentProps =
   PropsRuntime<'sidebar'>
   & PropsRenderSlots<
     | 'sidebar.brand.mark'
+    | 'sidebar.brand.backdrop'
     | 'sidebar.brand.name'
     | 'sidebar.toggle.badge'
     | 'sidebar.panellist'

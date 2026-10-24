@@ -47,6 +47,11 @@
   pointer-events: none;
 }
 
+/* Keep the right workspace on the same black ground as the left navigation. */
+:global([data-ds-dark-theme]) .panel {
+  --dsw-alias-bg-base: var(--dsw-specific-sidebar-fill);
+}
+
 /* Only docked Grid items slide. Their common ancestor remains untransformed
    and without a stacking context, so fixed floating children escape. */
 .panel :global([data-dockkit-host='dock']),

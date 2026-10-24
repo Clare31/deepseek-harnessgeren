@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-The right Sidebar: where the docking kit meets this product. It holds one docking surface per session, draws it as one edge-anchored panel in the frame's right column in either of two presentations, puts the expand button in the conversation header, and owns the navigation controller (`ctx.sidebarRight`), the tab-type registry (`ctx.sidebarRightTabs`), and the Tab domain that tells each open tab how it was navigated to and how long it lives.
+The right Sidebar: where the docking kit meets this product. It holds one docking surface per session, draws it as one edge-anchored panel in the frame's right column in either of two presentations, puts the expand button in the conversation header, and owns the navigation controller (`ctx.sidebarRight`), the tab-type registry (`ctx.sidebarRightTabs`), and the Tab domain that tells each open tab how it was navigated to and how long it lives. In dark mode, the right panel and its docked content inherit the black sidebar base, distinct from the charcoal conversation canvas.
 
 ## Table of Contents
 

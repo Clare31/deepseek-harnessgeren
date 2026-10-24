@@ -33,7 +33,7 @@ describe('theme bootstrap row', () => {
     expect(head).toMatchObject({ kind: 'style' })
     expect(body).toMatchObject({ kind: 'script', placement: 'body' })
     if (head?.kind !== 'style') throw new Error('theme head bootstrap row is not a style')
-    expect(head.text).toBe(':root{color-scheme:dark}body{background-color:#000000;--dsh-boot-bg:#000000}')
+    expect(head.text).toBe(':root{color-scheme:dark}body{background-color:#212123;--dsh-boot-bg:#212123}')
     expect(document.body.hasAttribute(DARK_ATTRIBUTE)).toBe(false)
     if (body?.kind !== 'script') throw new Error('theme body bootstrap row is not a script')
     runInNewContext(body.text, { document, matchMedia: globalThis.matchMedia })
@@ -66,7 +66,7 @@ describe('theme bootstrap row', () => {
     if (head?.kind !== 'style') throw new Error('theme head bootstrap row is not a style')
     expect(head.text).toBe(
       ':root{color-scheme:light}body{background-color:#fff;--dsh-boot-bg:#fff}'
-      + '@media(prefers-color-scheme:dark){:root{color-scheme:dark}body{background-color:#000000;--dsh-boot-bg:#000000}}',
+      + '@media(prefers-color-scheme:dark){:root{color-scheme:dark}body{background-color:#212123;--dsh-boot-bg:#212123}}',
     )
   })
 

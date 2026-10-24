@@ -19,7 +19,7 @@
 import { useEffect, useRef, useState } from 'react'
 import clsx from 'clsx'
 import {
-  FishLogo, IconNewChatOutlineMedium, IconNewChatOutlineRegular, IconPanelLeftOutlineRegular, isDarwinDesktop, ShortcutKeys, Tooltip,
+  FishLogo, IconEditOutlineRegular, IconPanelLeftOutlineRegular, isDarwinDesktop, ShortcutKeys, Tooltip,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { InjectFace, PropsRenderSlots, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
 import type {
@@ -210,6 +210,7 @@ export function SidebarRoot({
       }}
       onPointerLeave={() => { armLinger() }}
     >
+      {renderSlot('sidebar.brand.backdrop', {})}
       {/* macOS hiddenInset titlebar: the strip shares the row with the
           traffic lights and keeps the toggle at the sidebar's top-right. */}
       {darwinDesktop && <div className={css.topStrip} data-window-drag>{toggle}</div>}
@@ -265,9 +266,7 @@ export function SidebarRoot({
           onClick={() => { startSession() }}
         >
           <span className={css.newSessionLabelMask}><span className={css.newSessionContent}>
-            {wide
-              ? <IconNewChatOutlineMedium size={14} />
-              : <IconNewChatOutlineRegular size={windowsTitlebar ? 16 : 18} />}
+            <IconEditOutlineRegular size={18} />
             {wide && <span className={clsx(css.newSessionLabel, css.wide)}>{t('session.new')}</span>}
           </span></span>
           {wide && newShortcut !== undefined && newShortcut.keys.length > 0 && <span className={css.newSessionShortcut} aria-hidden="true">

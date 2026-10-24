@@ -1,11 +1,14 @@
 // @vitest-environment jsdom
 import { Context } from '@deepseek-ai/cordis'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, render } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import type { GlobalStandardProps } from '@deepseek-ai/dsh-client-ui-slots'
+import { LocaleRuntime } from '@deepseek-ai/dsh-client-locale/client'
 import { SlotRegistry } from '@deepseek-ai/dsh-client-ui-renderer/client'
 import { apply, inject } from '../src/client/index.ts'
-import { OfficialBrandMark, OfficialBrandName } from '../src/client/Brand.tsx'
+import { OfficialBrandMark, OfficialBrandName, OfficialSidebarMark } from '../src/client/Brand.tsx'
 import { apply as hostApply } from '../src/index.ts'
+import { SettingsLauncher } from '../src/client/SettingsLauncher.tsx'
 
 afterEach(() => {
   cleanup()
@@ -15,6 +18,9 @@ afterEach(() => {
 const HOLES = [
   'sidebar.brand.mark',
   'sidebar.brand.name',
+  'sidebar.brand.backdrop',
+  'conversation.hero.brand.mark',
+  'settings.launcher',
 ] as const
 
 const HERO_HOLE = 'conversation.hero.brand.mark'
@@ -22,10 +28,11 @@ const HERO_HOLE = 'conversation.hero.brand.mark'
 async function bench(declare = true) {
   const ctx = new Context()
   await ctx.plugin(SlotRegistry).await()
+  ctx.provide('locale', new LocaleRuntime(ctx))
   const slots = ctx.get('slots') as SlotRegistry
   const declareHoles = () => slots.register({
     name: 'root',
-    children: Object.fromEntries([...HOLES, HERO_HOLE].map(name => [name, { kind: 'single', scope: 'root' }])),
+    children: Object.fromEntries(HOLES.map(name => [name, { kind: 'single', scope: 'root' }])),
   } as never, () => null)
   const disposeHoles = declare ? declareHoles() : undefined
   return { ctx, slots, declareHoles, disposeHoles }
@@ -36,8 +43,8 @@ describe('official browser-brand plugin', () => {
     expect(hostApply).not.toThrow()
   })
 
-  it('declares only the slot service it uses', () => {
-    expect(inject).toEqual(['slots'])
+  it('declares the slot and locale services it uses', () => {
+    expect(inject).toEqual(['slots', 'locale'])
   })
 
   it('leaves every slot empty outside the official build profile', async () => {
@@ -71,21 +78,59 @@ describe('official browser-brand plugin', () => {
     for (const hole of HOLES) expect(after.slots.entries(hole)).toHaveLength(1)
   })
 
-  it('leaves the conversation hero on its declaring fallback even in official builds', async () => {
+  it('fills the conversation hero in official builds', async () => {
     vi.stubEnv('DSH_CLIENT_BUILD_PROFILE', 'official')
     const subject = await bench()
     await subject.ctx.plugin({ inject: [...inject], apply }).await()
-    expect(subject.slots.entries(HERO_HOLE)).toHaveLength(0)
+    expect(subject.slots.entries(HERO_HOLE)).toHaveLength(1)
+  })
+
+  it('replaces the account menu with the settings-only launcher in official builds', async () => {
+    vi.stubEnv('DSH_CLIENT_BUILD_PROFILE', 'official')
+    const subject = await bench()
+    subject.slots.register({ name: 'settings.launcher' }, () => null)
+    await subject.ctx.plugin({ inject: [...inject], apply }).await()
+    expect(subject.slots.entries('settings.launcher')[0]?.component).toBe(SettingsLauncher)
+  })
+
+  it('opens settings directly with an accessible icon-only rail button', () => {
+    const openSettings = vi.fn()
+    const props = {
+      ...({} as GlobalStandardProps), settingsOpen: false, openSettings, openOnboarding: () => {},
+      settingsShortcut: { keys: ['Ctrl', ','], aria: 'Control+,' },
+      t: () => '设置',
+    }
+    const view = render(<SettingsLauncher {...props} wide />)
+    const button = screen.getByRole('button', { name: '设置' })
+    expect(button.getAttribute('aria-haspopup')).toBe('dialog')
+    expect(button.getAttribute('aria-keyshortcuts')).toBe('Control+,')
+    fireEvent.click(button)
+    expect(openSettings).toHaveBeenCalledOnce()
+    expect(screen.queryByRole('menu')).toBeNull()
+    expect(screen.queryByText('意见反馈')).toBeNull()
+    expect(screen.queryByText('登录')).toBeNull()
+    view.rerender(<SettingsLauncher {...props} wide={false} />)
+    expect(screen.getByRole('button', { name: '设置' }).textContent).toBe('')
   })
 
   it('renders the official name independently from both requested mark sizes', () => {
     const name = render(<OfficialBrandName />)
-    expect(name.container.querySelector('svg')?.getAttribute('viewBox')).toBe('26 0 156 24')
+    expect(name.container.firstElementChild?.className).toContain('name')
     name.unmount()
 
     const mark = render(<OfficialBrandMark size={34} />)
-    expect(mark.container.querySelector('svg')?.getAttribute('width')).toBe('34')
+    expect(mark.container.querySelector('span')?.style.width).toBe('34px')
     mark.rerender(<OfficialBrandMark size={24} />)
-    expect(mark.container.querySelector('svg')?.getAttribute('width')).toBe('24')
+    expect(mark.container.querySelector('span')?.style.width).toBe('24px')
+  })
+
+  it('uses the Rabb wordmark for the sidebar independently of the rabbit hero', () => {
+    const sidebar = render(<OfficialSidebarMark size={24} />)
+    expect(sidebar.container.querySelector('span')?.style.width).toBe('36px')
+    expect(sidebar.container.querySelector('span')?.className).toContain('sidebarMark')
+    sidebar.unmount()
+    const hero = render(<OfficialBrandMark size={34} />)
+    expect(hero.container.querySelector('svg')).toBeNull()
+    expect(hero.container.querySelector('span')?.style.height).toBe('34px')
   })
 })

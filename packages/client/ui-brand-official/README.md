@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-This package gives an `official` client build the DeepSeek Harness mark and name in the sidebar. Other build profiles keep the shell's fish mark and local-build label, while the conversation hero always uses the animated fish. Choose it for deployments branded as DeepSeek Harness; deployments with another identity should provide a replacement brand package. It has no runtime state and does not affect model requests.
+Official builds show Rabb Code in the sidebar and a rounded monochrome rabbit in the conversation hero. A single user-supplied pixel image rotates 90° counterclockwise, covers an 80px header, and fades through T3 Code’s original mask and overlay gradient; attribution is in `ARTWORK-LICENSE.txt`. A localized Settings gear replaces the footer account menu, with keyboard shortcuts and collapsed-rail tooltips. Other profiles retain shell fallbacks. The plugin has no runtime state and does not affect model requests.
 
 ## Table of Contents
 
@@ -25,15 +25,15 @@ This package gives an `official` client build the DeepSeek Harness mark and name
 <a id="use-this-package"></a>
 ## Use this package
 
-Mount this plugin in the browser roster of a deployment whose identity is DeepSeek's own, then build the client with the `official` profile so the occupants register.
+Mount this plugin in the browser roster, then build the client with the `official` profile to register the Rabb Code artwork.
 
 ### Choosing the profile
 
-`DSH_CLIENT_BUILD_PROFILE` selects which brand renders. An `official` build shows the official mark and name in the sidebar; any other value leaves the shell fallbacks — the fish mark and the local-build label — in place. The conversation hero shows the animated hero fish from `dsh-client-ui-conversation` regardless of profile, because that fallback is already the official mark. The plugin still loads and validates in both cases; only the registration is profile-gated.
+`DSH_CLIENT_BUILD_PROFILE` selects which brand renders. An `official` build fills the sidebar mark, name, decorative header backdrop, and conversation hero mark. Other values leave the declaring packages' fallbacks in place. The conversation headline is Rabb Code in both languages. The plugin loads in either profile; only artwork registration is profile-gated.
 
 ### Replacing the brand
 
-A deployment with its own identity leaves this package out and composes another package that occupies the sidebar slots — and the hero slot, which this package leaves on its fallback. Occupying a slot is the only composition route; there is no brand configuration surface here.
+A deployment with another identity replaces this package with one occupying the sidebar and hero slots. Branding is composed through slots rather than runtime configuration.
 
 -----
 
@@ -43,7 +43,7 @@ A deployment with its own identity leaves this package out and composes another 
 <details>
 <summary>Implementation internals — click to expand</summary>
 
-The two occupants install as one declaration-aware registration set: nested `ctx.slots.inject()` calls wait on the sidebar declaration, so the set works whether this row activates before or after the declarer, withdraws both occupants when the declaration collapses, and leaves no partial brand mix during HMR. The browser half is [`src/client/index.ts`](src/client/index.ts); the node half is an empty Loader seat. The browser title is a build-environment concern (`DSH_CLIENT_TITLE`), outside the slot system.
+The sidebar occupants install together through nested `ctx.slots.inject()` calls. The hero mark follows its own declaration lifetime. Each registration works before or after its declarer and is removed when that declaration collapses. The browser half is [`src/client/index.ts`](src/client/index.ts); the node half is an empty Loader seat. The browser title is a build-environment concern (`DSH_CLIENT_TITLE`), outside the slot system.
 
 </details>
 
