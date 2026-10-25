@@ -497,7 +497,7 @@ export const InputBar = memo(function InputBar({
             <Tooltip label={primaryStops ? t('input.stop') : primaryLabel} shortcutKeys={primaryStops ? stopKeys : undefined} side="top" delayMs={500} disabled={primaryDisabled}>
               <button
                 type="button"
-                className={css.primary}
+                className={[css.primary, !primaryStops && css.sendArtwork].filter(Boolean).join(' ')}
                 aria-label={primaryLabel}
                 disabled={primaryDisabled}
                 onMouseDown={keepFocus}

@@ -9,7 +9,7 @@ kind: "package-reference"
 
 ## 概述
 
-官方构建在侧边栏显示 Rabb Code，在会话首页显示圆角黑白兔子。用户提供的单张像素图片逆时针旋转 90°，覆盖 80px 顶部区域，并通过 T3 Code 原有遮罩与叠加渐变淡出；署名见 `ARTWORK-LICENSE.txt`。本地化设置齿轮取代底部账户菜单，支持快捷键与折叠轨道提示。其他构建保留外壳默认显示。本插件不持有运行时状态，也不影响模型请求。
+官方构建在侧边栏显示 Rabb Code，在会话首页显示圆角黑白兔子。用户提供的单张像素图片逆时针旋转 90°，覆盖 80px 顶部区域，并通过 T3 Code 原有遮罩与叠加渐变淡出；署名见 `ARTWORK-LICENSE.txt`。本地化设置齿轮取代底部账户菜单，支持快捷键与折叠轨道提示。其他构建保留外壳默认显示。所选背景保存在用户设置中，不影响模型请求。
 
 ## 目录
 
@@ -31,6 +31,10 @@ kind: "package-reference"
 
 `DSH_CLIENT_BUILD_PROFILE` 决定渲染哪个品牌。`official` 构建填充侧栏标志、名称、顶部装饰背景和会话首屏标志。其他取值保留声明包的回退。会话标题在两种语言中均为 Rabb Code。两种 profile 都会加载本插件；只有品牌素材注册受 profile 门控。
 
+### 选择背景
+
+打开设置 → 外观设置，选择像素、蓝色 Blueprint 或 Night。Host 接受保存后，顶部与发送按钮背景一起变化。`ui-brand-official.artwork` 默认是 `pixel`，其他有效值为 `blueprint` 和 `night`。保存被拒绝或失败时保留原选择，并显示重试提示。
+
 ### 替换品牌
 
 采用其他品牌的部署使用另一个占据侧栏与首屏 slot 的包替换本包。品牌通过 slot 组合，不提供运行时配置。
@@ -43,7 +47,7 @@ kind: "package-reference"
 <details>
 <summary>实现细节——点击展开</summary>
 
-侧栏填充通过嵌套的 `ctx.slots.inject()` 一起安装。首屏标志跟随自己的声明生命周期。各注册均支持在声明者之前或之后激活，并随声明消失而撤回。浏览器半部是 [`src/client/index.ts`](src/client/index.ts)；node 半部是一个空 Loader 座位。浏览器标题是构建环境的事（`DSH_CLIENT_TITLE`），不在 slot 系统之内。
+侧栏填充通过嵌套的 `ctx.slots.inject()` 一起安装。首屏标志跟随自己的声明生命周期。各注册均支持在声明者之前或之后激活，并随声明消失而撤回。浏览器半部是 [`src/client/index.ts`](src/client/index.ts)；Host 半部校验并持久化背景选择。可撤销的主题 token 层把已接受的选择应用到顶部与输入栏。浏览器标题是构建环境的事（`DSH_CLIENT_TITLE`），不在 slot 系统之内。
 
 </details>
 

@@ -1,0 +1,68 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`offers all three artworks and writes the selected choice 1`] = `
+<DocumentFragment>
+  <section
+    class="_section_9be6cc"
+  >
+    <h2
+      class="_title_9be6cc"
+    >
+      appearance
+    </h2>
+    <p
+      class="_description_9be6cc"
+    >
+      description
+    </p>
+    <div
+      aria-label="background"
+      class="_cards_9be6cc"
+      role="group"
+    >
+      <button
+        aria-pressed="true"
+        class="_card_9be6cc"
+        type="button"
+      >
+        <span
+          aria-hidden="true"
+          class="_preview_9be6cc"
+          style="background-image: var(--rabb-artwork-pixel);"
+        />
+        <span>
+          pixel
+        </span>
+      </button>
+      <button
+        aria-pressed="false"
+        class="_card_9be6cc"
+        type="button"
+      >
+        <span
+          aria-hidden="true"
+          class="_preview_9be6cc"
+          style="background-image: var(--rabb-artwork-blueprint);"
+        />
+        <span>
+          blueprint
+        </span>
+      </button>
+      <button
+        aria-pressed="false"
+        class="_card_9be6cc"
+        type="button"
+      >
+        <span
+          aria-hidden="true"
+          class="_preview_9be6cc"
+          style="background-image: var(--rabb-artwork-night);"
+        />
+        <span>
+          night
+        </span>
+      </button>
+    </div>
+  </section>
+</DocumentFragment>
+`;

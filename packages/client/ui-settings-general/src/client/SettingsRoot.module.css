@@ -242,6 +242,15 @@
   white-space: nowrap;
 }
 
+@media (max-width: 600px) {
+  .panel { flex-direction: column; }
+  .nav { width: auto; gap: 8px; padding: 12px; }
+  .navList { flex-direction: row; flex-wrap: wrap; gap: 4px; }
+  .navCell { flex: 1 1 120px; }
+  .content { min-height: 0; }
+  .options { padding-inline: 12px; }
+}
+
 /* No app-region rule here: the overlay portals beside #root (SettingsRoot), so
    ui-web base.css's `body > :not(#root)` subtraction covers it wherever it
    overlaps a chrome row's drag — including above every column, which an in-root

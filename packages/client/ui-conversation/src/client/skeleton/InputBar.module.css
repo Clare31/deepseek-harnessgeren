@@ -404,6 +404,15 @@
   cursor: default;
 }
 
+/* Deployment artwork follows the header selection; stop controls keep their fill. */
+.sendArtwork,
+.sendArtwork:hover:not(:disabled) {
+  background-image: var(--dsw-specific-composer-send-image, none);
+  background-size: var(--dsw-specific-composer-send-size, auto 100%);
+  background-position: left center;
+  background-repeat: no-repeat;
+}
+
 .retry {
   margin-left: 8px;
   padding: 1px 8px;

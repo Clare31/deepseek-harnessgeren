@@ -1,18 +1,27 @@
 // @vitest-environment jsdom
 import { Context } from '@deepseek-ai/cordis'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import type { GlobalStandardProps } from '@deepseek-ai/dsh-client-ui-slots'
 import { LocaleRuntime } from '@deepseek-ai/dsh-client-locale/client'
 import { SlotRegistry } from '@deepseek-ai/dsh-client-ui-renderer/client'
 import { apply, inject } from '../src/client/index.ts'
 import { OfficialBrandMark, OfficialBrandName, OfficialSidebarMark } from '../src/client/Brand.tsx'
-import { apply as hostApply } from '../src/index.ts'
 import { SettingsLauncher } from '../src/client/SettingsLauncher.tsx'
+
+beforeEach(() => {
+  const TestURL = class extends URL {}
+  Object.defineProperties(TestURL, {
+    createObjectURL: { value: vi.fn(() => 'blob:rabb-test') },
+    revokeObjectURL: { value: vi.fn() },
+  })
+  vi.stubGlobal('URL', TestURL)
+})
 
 afterEach(() => {
   cleanup()
   vi.unstubAllEnvs()
+  vi.unstubAllGlobals()
 })
 
 const HOLES = [
@@ -21,6 +30,7 @@ const HOLES = [
   'sidebar.brand.backdrop',
   'conversation.hero.brand.mark',
   'settings.launcher',
+  'settings.section',
 ] as const
 
 const HERO_HOLE = 'conversation.hero.brand.mark'
@@ -29,22 +39,51 @@ async function bench(declare = true) {
   const ctx = new Context()
   await ctx.plugin(SlotRegistry).await()
   ctx.provide('locale', new LocaleRuntime(ctx))
+  let snapshot = { status: 'ready', value: { artwork: 'pixel' }, writable: true }
+  const listeners = new Set<() => void>()
+  const appearance = {
+    getSnapshot: () => snapshot,
+    subscribe: (listener: () => void) => { listeners.add(listener); return () => { listeners.delete(listener) } },
+    set: vi.fn(async () => true),
+  }
+  ctx.provide('configForms', { get: () => appearance } as never)
+  ctx.provide('remote', {} as never)
+  const removeTokens = vi.fn()
+  const overrideTokens = vi.fn(() => removeTokens)
+  ctx.provide('theme', { overrideTokens } as never)
   const slots = ctx.get('slots') as SlotRegistry
   const declareHoles = () => slots.register({
     name: 'root',
-    children: Object.fromEntries(HOLES.map(name => [name, { kind: 'single', scope: 'root' }])),
+    children: Object.fromEntries(HOLES.map(name => [name, { kind: name === 'settings.section' ? 'list' : 'single', scope: 'root' }])),
   } as never, () => null)
   const disposeHoles = declare ? declareHoles() : undefined
-  return { ctx, slots, declareHoles, disposeHoles }
+  return { ctx, slots, declareHoles, disposeHoles, overrideTokens, removeTokens, listeners, changeArtwork(artwork: string) {
+    snapshot = { ...snapshot, value: { artwork } }
+    for (const listener of listeners) listener()
+  } }
 }
 
 describe('official browser-brand plugin', () => {
-  it('keeps the host Loader entry inert', () => {
-    expect(hostApply).not.toThrow()
+  it('synchronizes accepted artwork across header and composer and releases subscriptions on disposal', async () => {
+    vi.stubEnv('DSH_CLIENT_BUILD_PROFILE', 'official')
+    const subject = await bench()
+    const fiber = subject.ctx.plugin({ inject: [...inject], apply })
+    try {
+      await fiber.await()
+      subject.changeArtwork('night')
+      expect(subject.overrideTokens).toHaveBeenLastCalledWith('rabb.appearance', expect.objectContaining({
+        '--rabb-header-image': { light: 'var(--rabb-artwork-night)', dark: 'var(--rabb-artwork-night)' },
+        '--dsw-specific-composer-send-image': { light: 'var(--rabb-send-night, var(--rabb-artwork-night))', dark: 'var(--rabb-send-night, var(--rabb-artwork-night))' },
+      }))
+      expect(subject.removeTokens).toHaveBeenCalledOnce()
+    } finally { await fiber.dispose() }
+    expect(subject.listeners.size).toBe(0)
+    expect(subject.removeTokens).toHaveBeenCalledTimes(2)
+    subject.changeArtwork('blueprint')
+    expect(subject.overrideTokens).toHaveBeenCalledTimes(2)
   })
-
   it('declares the slot and locale services it uses', () => {
-    expect(inject).toEqual(['slots', 'locale'])
+    expect(inject).toEqual(['slots', 'locale', 'configForms', 'remote', 'theme'])
   })
 
   it('leaves every slot empty outside the official build profile', async () => {
