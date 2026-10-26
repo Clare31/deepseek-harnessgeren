@@ -422,3 +422,13 @@ it.each([undefined, '7'])('applies file-owned compression only to the final nota
   expect(dmg?.[3].env.ELECTRON_BUILDER_COMPRESSION_LEVEL).toBe('9')
   expect(writeFileSync).toHaveBeenCalledOnce()
 })
+
+it.each(['linux-x64', 'linux-arm64'] as const)('keeps Rabb branding in unsigned %s packages', async (target) => {
+  const { run, stages } = supervisor()
+  const invocation = parseDesktopPackageInvocation([target, '--unsigned'], 'linux', target === 'linux-x64' ? 'x64' : 'arm64')
+  await packageTarget(invocation, environment, run)
+  expect(stages[0]).toBe('run build:official')
+  expect(stages.some(stage => stage.startsWith('run release:pack --family dsh'))).toBe(true)
+  expect(stages.some(stage => stage.startsWith('exec tsx apps/desktop/scripts/pack-local-packages.ts'))).toBe(false)
+  expect(stages.some(stage => stage.startsWith('run sign:'))).toBe(false)
+})

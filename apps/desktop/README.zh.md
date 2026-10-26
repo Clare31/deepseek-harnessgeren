@@ -300,7 +300,7 @@ Linux 打包关闭 asar，使 `@deepseek-ai/libreoffice-kit` 能回退到其 WAS
 
 Linux 安装包的内置窗口图标使用 `resources/icon-linux.png` 中的圆角兔子图案，外部四角透明。替换原图后，运行 `pnpm --dir apps/desktop run render:linux-icon`，生成标准 512×512 尺寸的应用菜单图标 `resources/icon-linux-launcher.png`。包内 `desktopName`、启动器文件名与 `StartupWMClass` 共用 `deepseek-harness` 标识，使 Wayland 与 X11 侧边栏能将运行窗口关联到应用图标；这不改变应用名或数据路径。
 
-在仓库根目录运行 `pnpm --dir apps/desktop run package:linux:x64:github`，可构建检查 `Clare31/deepseek-harnessgeren` 公开正式版本的 Linux x64 安装包。普通 unsigned 命令仍不配置更新源。其他公开仓库可通过 `pnpm --dir apps/desktop exec tsx scripts/package-target.ts linux-x64 --unsigned --github-repository OWNER/REPOSITORY` 选择。
+在仓库根目录运行 `pnpm --dir apps/desktop run package:linux:x64:github`，可构建检查 `Clare31/deepseek-harnessgeren` 公开正式版本的 Linux x64 安装包。普通 unsigned 命令仍不配置更新源。其他公开仓库可通过 `pnpm --dir apps/desktop exec tsx scripts/package-target.ts linux-x64 --unsigned --github-repository OWNER/REPOSITORY` 选择。 Linux 未签名安装包保留 Rabb Code 品牌。
 
 GitHub 构建包含 `app-update.yml`、Debian 包标识，以及产物旁的 `latest-linux.yml` 更新清单。将清单和它引用的文件一起发布到公开、非草稿、非预发布的 GitHub Release，标签为 `v<version>`。后续版本必须使用更高的正式语义版本号。首次安装的包可以是预发布版本，但此更新源只提供正式版本。仅推送源码提交不会生成更新；此命令不上传产物，也不创建 Release。
 
