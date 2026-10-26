@@ -25,7 +25,7 @@ kind: "package-reference"
 <a id="use-this-package"></a>
 ## 使用本包
 
-在设置里打开**内置插件**。[ui-settings-plugin-inventory](../ui-settings-plugin-inventory/README.zh.md) 把清单作为分区唯一的标签页贡献进来，直接显示为页面本身；注册第二个标签页后这一行就变成标签行。组合里没有任何标签页贡献的部署会显示分区的空提示。
+在设置里打开**内置插件**。标题旁的**添加插件**入口由插件管理器贡献，关闭设置后打开安装对话框。[ui-settings-plugin-inventory](../ui-settings-plugin-inventory/README.zh.md) 把清单作为分区唯一的标签页贡献进来，直接显示为页面本身；注册第二个标签页后这一行就变成标签行。组合里没有任何标签页贡献的部署会显示分区的空提示。
 
 要贡献一个标签页，带 `id`、`order` 和本地化的 `label` 注册进 `settings.plugins.tab`；分区按序渲染条目，标签页在首次被选中时挂载。功能文案留在注册方自己的字典里。
 
@@ -37,7 +37,7 @@ kind: "package-reference"
 <details>
 <summary>实现细节——点击展开</summary>
 
-分区声明 `settings.plugins.tab`，一个根级 list slot，其标签成为有序的标签页；只有一个贡献时直接渲染为页面本身，标签页在首次被选中后保持挂载，搜索词和清单快照因此在切换间不丢失。分区的 `inject` 把 slot 账本投影成按序排列、标签随当前语言的行，在账本版本或语言修订变化前保持缓存。宿主半侧是一个空的 `apply`，只为让本包占一条 Loader 行，客户端模块系统据此送出浏览器半侧。
+分区声明标题操作列表 `settings.plugins.actions`，向操作传入设置关闭回调，并声明 `settings.plugins.tab`，一个根级 list slot，其标签成为有序的标签页；只有一个贡献时直接渲染为页面本身，标签页在首次被选中后保持挂载，搜索词和清单快照因此在切换间不丢失。分区的 `inject` 把 slot 账本投影成按序排列、标签随当前语言的行，在账本版本或语言修订变化前保持缓存。宿主半侧是一个空的 `apply`，只为让本包占一条 Loader 行，客户端模块系统据此送出浏览器半侧。
 
 </details>
 

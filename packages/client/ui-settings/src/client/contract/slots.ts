@@ -64,6 +64,8 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
      * and configuration plugins collaborate without depending on one another.
      */
     'settings.plugins.tab': { kind: 'list'; scope: 'root'; owner: SettingsPluginsTabOwnerProps }
+    /** Installation actions in the Plugins settings header; actions may close Settings before navigating. */
+    'settings.plugins.actions': { kind: 'list'; scope: 'root'; owner: SettingsSectionOwnerProps }
     /**
      * Root-scoped onboarding steps contributed by settings features. The
      * shell mounts one ordered step at a time; the active registrant either

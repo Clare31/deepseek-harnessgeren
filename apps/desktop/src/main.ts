@@ -794,6 +794,10 @@ async function main(): Promise<void> {
       if (width < 960) window.setSize(960, height)
     }
   })
+  ipcMain.handle(DESKTOP_IPC.updatesCheck, async (event) => {
+    assertProductSender(event)
+    await openUpdatePrompt(true)
+  })
   ipcMain.handle(DESKTOP_IPC.updatesOpen, async (event) => {
     assertProductSender(event)
     await openUpdatePrompt()

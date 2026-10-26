@@ -1,5 +1,6 @@
 import type { HeroBrandMarkOwnerProps } from '@deepseek-ai/dsh-client-ui-conversation/client'
 import type { SidebarBrandMarkOwnerProps } from '@deepseek-ai/dsh-client-ui-sidebar/client'
+import type { PropsLocale } from '@deepseek-ai/dsh-client-ui-slots'
 import css from './Brand.module.css'
 
 /**
@@ -16,16 +17,17 @@ export function OfficialBrandMark({ size, className }: HeroBrandMarkOwnerProps) 
  * @param props - Host-supplied mark presentation.
  * @returns the Rabb wordmark.
  */
-export function OfficialSidebarMark({ size }: SidebarBrandMarkOwnerProps) {
-  return <span aria-hidden="true" className={css.sidebarMark} style={{ width: size * 36 / 24, height: size * 20 / 24 }} />
+export function OfficialSidebarMark({ size, t }: SidebarBrandMarkOwnerProps & PropsLocale<'rabb.brand'>) {
+  return <span aria-hidden="true" className={css.sidebarMark} style={{ fontSize: size * 17 / 24 }}>{t('wordmarkRabb')}</span>
 }
 
 /**
- * Render the Code name artwork independently of its Rabb wordmark.
+ * Render the Code name with the same typography as its Rabb wordmark.
+ * @param props - Localized brand copy.
  * @returns the official name wordmark.
  */
-export function OfficialBrandName() {
-  return <span aria-hidden="true" className={css.name} />
+export function OfficialBrandName({ t }: PropsLocale<'rabb.brand'>) {
+  return <span aria-hidden="true" className={css.name}>{t('wordmarkCode')}</span>
 }
 
 /**

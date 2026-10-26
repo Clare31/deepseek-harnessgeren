@@ -3,6 +3,10 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { useSyncExternalStore } from 'react'
 import { afterEach, expect, it, vi } from 'vitest'
 import type { PropsLocale } from '@deepseek-ai/dsh-client-ui-slots'
+import { DesktopUpdateNotice, DesktopUpdatesSection } from '../src/client/DesktopUpdates.tsx'
+import { bindSnapshotSelector } from '@deepseek-ai/dsh-client-test-runtime'
+import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
+import type { DesktopUpdateView } from '../src/types.ts'
 import { DesktopUpdateIndicator } from '../src/client/DesktopUpdateIndicator.tsx'
 import type { DesktopUpdateBridge, DesktopUpdatePresentation } from '../src/types.ts'
 import { DesktopUpdateSource } from '../src/client/desktop-update-source.ts'
@@ -176,4 +180,73 @@ it.each([
     fireEvent.focus(screen.getByRole('button', { name: label }))
     expect((await screen.findByRole('tooltip')).textContent).toBe(label)
   } finally { f.view.unmount(); f.status.resolve({ phase: 'idle' }) }
+})
+
+function updateSurfaces() {
+  const state = createSnapshotStore<DesktopUpdateView>({ failed: false, opening: false, presentation: { phase: 'idle' } })
+  const openDesktopUpdate = vi.fn()
+  const checkDesktopUpdates = vi.fn()
+  const shared = { t: translate(zh), supported: true, useDesktopUpdate: bindSnapshotSelector(state),
+    openDesktopUpdate, checkDesktopUpdates }
+  return { state, shared, openDesktopUpdate, checkDesktopUpdates }
+}
+
+it('offers automatic updates once per version and leaves downloads untouched on dismissal', () => {
+  const f = updateSurfaces()
+  const props = f.shared as Parameters<typeof DesktopUpdateNotice>[0]
+  render(<DesktopUpdateNotice {...props} />)
+  act(() => { f.state.set({ failed: false, opening: false, presentation: available }) })
+  expect(screen.getByRole('dialog')).toBeTruthy()
+  expect(f.openDesktopUpdate).not.toHaveBeenCalled()
+  fireEvent.click(screen.getByRole('button', { name: '稍后' }))
+  expect(screen.queryByRole('dialog')).toBeNull()
+  act(() => { f.state.set({ failed: false, opening: false, presentation: { ...available } }) })
+  expect(screen.queryByRole('dialog')).toBeNull()
+  act(() => { f.state.set({ failed: false, opening: false, presentation: { phase: 'available', version: '1.0.2' } }) })
+  fireEvent.click(screen.getByRole('button', { name: '确认更新' }))
+  expect(f.openDesktopUpdate).toHaveBeenCalledOnce()
+  expect(screen.queryByRole('dialog')).toBeNull()
+})
+
+it('does not duplicate manual native update prompts', () => {
+  const f = updateSurfaces()
+  render(<DesktopUpdateNotice {...f.shared as Parameters<typeof DesktopUpdateNotice>[0]} />)
+  act(() => { f.state.set({ failed: false, opening: true, presentation: available }) })
+  act(() => { f.state.set({ failed: false, opening: false, presentation: available }) })
+  expect(screen.queryByRole('dialog')).toBeNull()
+})
+
+it('checks from Settings, exposes progress, and requires a separate action for an available update', () => {
+  const f = updateSurfaces()
+  render(<DesktopUpdatesSection {...f.shared as Parameters<typeof DesktopUpdatesSection>[0]} />)
+  fireEvent.click(screen.getByRole('button', { name: '检查更新' }))
+  expect(f.checkDesktopUpdates).toHaveBeenCalledOnce()
+  expect(f.openDesktopUpdate).not.toHaveBeenCalled()
+  act(() => { f.state.set({ failed: false, opening: false, presentation: available }) })
+  fireEvent.click(screen.getByRole('button', { name: '确认更新' }))
+  expect(f.openDesktopUpdate).toHaveBeenCalledOnce()
+  act(() => { f.state.set({ failed: false, opening: false, presentation: { phase: 'downloading', version: '1.0.1', percent: 25 } }) })
+  expect(screen.getByRole('button').hasAttribute('disabled')).toBe(true)
+  expect(screen.getByRole('status').textContent).toContain('25%')
+})
+
+it('does not offer native actions in an ordinary browser', () => {
+  const f = updateSurfaces()
+  render(<DesktopUpdatesSection {...{ ...f.shared, supported: false } as Parameters<typeof DesktopUpdatesSection>[0]} />)
+  expect(screen.getByRole('button').hasAttribute('disabled')).toBe(true)
+  expect(screen.getByRole('status').textContent).toBe(zh['updates.unavailable'])
+})
+
+it('separates explicit native checks from download actions and contains failed checks', async () => {
+  const check = vi.fn().mockRejectedValue(new Error('bridge unavailable'))
+  const open = vi.fn(async () => {})
+  const source = new DesktopUpdateSource({ status: async () => ({ phase: 'idle' }), subscribe: () => () => {}, open, check })
+  source.check()
+  source.check()
+  expect(check).toHaveBeenCalledOnce()
+  await vi.waitFor(() => { expect(source.store.getSnapshot().failed).toBe(true) })
+  expect(open).not.toHaveBeenCalled()
+  source.dispose()
+  source.check()
+  expect(check).toHaveBeenCalledOnce()
 })

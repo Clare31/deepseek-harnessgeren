@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-Official builds show Rabb Code in the sidebar and a rounded monochrome rabbit in the conversation hero. A single user-supplied pixel image rotates 90° counterclockwise, covers an 80px header, and fades through T3 Code’s original mask and overlay gradient; attribution is in `ARTWORK-LICENSE.txt`. A localized Settings gear replaces the footer account menu, with keyboard shortcuts and collapsed-rail tooltips. Other profiles retain shell fallbacks. The selection persists in user settings and does not affect model requests.
+Official builds show Rabb Code as text in OpenAI Sans Medium in the sidebar and conversation headline, with a rounded monochrome rabbit in the conversation hero. A single user-supplied pixel image rotates 90° counterclockwise, covers an 80px header, and fades through T3 Code’s original mask and overlay gradient; attribution is in `ARTWORK-LICENSE.txt`. A localized Settings gear replaces the footer account menu, with keyboard shortcuts and collapsed-rail tooltips. Other profiles retain shell fallbacks. The selection persists in user settings and does not affect model requests.
 
 ## Table of Contents
 

@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict'
 import { Context, Service } from '@deepseek-ai/cordis'
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest'
-import { cleanup, render } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { LocaleRuntime } from '@deepseek-ai/dsh-client-locale/client'
 import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
 import type { ILayout, PanelInfo } from '@deepseek-ai/dsh-client-ui-layout/client'
@@ -13,6 +13,7 @@ import * as settings from '@deepseek-ai/dsh-client-ui-settings/client'
 import { apply, inject, NS, PANEL_ID } from '../src/client/index.ts'
 import { PluginManagerPage } from '../src/client/PluginManagerPage.tsx'
 import { PluginRefreshToast, type PluginRefreshToastFace } from '../src/client/PluginRefreshToast.tsx'
+import { SettingsAddPluginAction, type SettingsAddPluginActionInjected } from '../src/client/SettingsAddPluginAction.tsx'
 import { PluginsPanelIcon } from '../src/client/PluginsPanelIcon.tsx'
 import type { PluginManagerFace } from '../src/client/manager-store.ts'
 
@@ -56,6 +57,7 @@ function declare(slots: SlotRegistry): () => void {
     name: 'root',
     children: {
       'main': { kind: 'keyed', scope: 'root' },
+      'settings.plugins.actions': { kind: 'list', scope: 'root' },
       'shell.overlay': { kind: 'list', scope: 'root' },
       'sidebar.panellist': { kind: 'list', scope: 'root' },
     },
@@ -63,6 +65,36 @@ function declare(slots: SlotRegistry): () => void {
 }
 
 describe('ui-plugin-manager browser plugin', () => {
+  it('opens the installation dialog from Settings and releases the shortcut on unload', async () => {
+    const b = await bench()
+    const removeActions = declare(b.slots)
+    const fiber = b.ctx.plugin({ inject: [...inject], apply })
+    await fiber.await()
+    const entry = b.slots.entries('main')[0]!
+    assert(entry.store && 'create' in entry.store)
+    const navigation = entry.store.create()
+    assert(navigation.actions.setTab && navigation.actions.setView)
+    navigation.actions.setTab('discover')
+    navigation.actions.setView({ kind: 'more' })
+    const shortcut = b.slots.entries('settings.plugins.actions')[0]!
+    expect(shortcut.component).toBe(SettingsAddPluginAction)
+    const injected: object = shortcut.inject!()
+    const action = injected as SettingsAddPluginActionInjected
+    const mainInjected: object = entry.inject!()
+    const face = mainInjected as PluginManagerFace
+    const close = vi.fn(() => { expect(b.panelInfo.getSnapshot().activePanelId).toBeNull() })
+    const props = { t: (key: string) => key, close, ...action } as Parameters<typeof SettingsAddPluginAction>[0]
+    render(<SettingsAddPluginAction {...props} />)
+    fireEvent.click(screen.getByRole('button', { name: 'addPlugin' }))
+    expect(close).toHaveBeenCalledOnce()
+    expect(b.panelInfo.getSnapshot().activePanelId).toBe(PANEL_ID)
+    expect(navigation.getSnapshot()).toEqual({ tab: 'installed', view: { kind: 'list' } })
+    expect(face.hooks.pluginManager.getSnapshot().install.open).toBe(true)
+    await fiber.dispose()
+    expect(b.slots.entries('settings.plugins.actions')).toHaveLength(0)
+    removeActions()
+  })
+
   it('resets bundle selection when leaving Plugins and releases its panel observer with the registration', async () => {
     const b = await bench()
     const removeRoot = declare(b.slots)

@@ -32,6 +32,7 @@ import { createSettingsShellStore } from './shell-store.ts'
 import { SettingsRoot } from './SettingsRoot.tsx'
 import { DesktopUpdateBadge } from './DesktopUpdateIndicator.tsx'
 import type { DesktopUpdateBridge } from '../types.ts'
+import { DesktopUpdatesSection, DesktopUpdateNotice, type DesktopUpdatesInjected } from './DesktopUpdates.tsx'
 import { DesktopUpdateSource } from './desktop-update-source.ts'
 import { CloseLabel, HeaderContent, TriggerContent } from './chrome.tsx'
 import { GeneralSection } from './GeneralSection.tsx'
@@ -93,6 +94,19 @@ export function apply(ctx: ClientContext): void {
   const carrier = (globalThis as typeof globalThis & { dshDesktop?: { protocolVersion: number; updates?: DesktopUpdateBridge } }).dshDesktop
   const desktopUpdate = new DesktopUpdateSource(carrier?.protocolVersion === 1 ? carrier.updates : undefined)
   ctx.effect(() => () => { desktopUpdate.dispose() }, 'ui-settings-general: desktop update carrier')
+  const updateFace = (): DesktopUpdatesInjected => ({
+    supported: carrier?.protocolVersion === 1 && carrier.updates?.check !== undefined,
+    hooks: { desktopUpdate: desktopUpdate.store },
+    openDesktopUpdate: () => { desktopUpdate.open() },
+    checkDesktopUpdates: () => { desktopUpdate.check() },
+  })
+  ctx.slots.inject('settings.section', () => ctx.slots.register({
+    name: 'settings.section', id: 'updates', order: 90, label: () => ctx.locale.bind(NS)('updates.title'), locale: NS,
+    inject: updateFace,
+  }, DesktopUpdatesSection))
+  ctx.slots.inject('shell.overlay', () => ctx.slots.register({
+    name: 'shell.overlay', id: 'desktop.update.notice', locale: NS, inject: updateFace,
+  }, DesktopUpdateNotice))
   ctx.slots.inject('sidebar.toggle.badge', () => ctx.slots.register({
     name: 'sidebar.toggle.badge', locale: NS,
     inject: () => ({ hooks: { desktopUpdate: desktopUpdate.store, connectionState: connection.state } }),

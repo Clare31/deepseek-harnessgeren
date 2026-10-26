@@ -1,0 +1,7 @@
+OpenAI Sans Medium
+
+Copyright belongs to OpenAI and its font designers. This font is separate from the MIT-licensed Harness source and artwork.
+
+The development font was read from the locally installed Codex application asset webview/assets/OpenAISans-Medium-7b9c963f9063.woff2 and embedded without modification in src/client/Brand.module.css. The CSS family alias is Rabb Brand. Official typography information: https://openai.com/brand/ .
+
+This notice does not grant redistribution rights for the font.

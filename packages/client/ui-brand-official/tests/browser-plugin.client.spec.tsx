@@ -2,12 +2,14 @@
 import { Context } from '@deepseek-ai/cordis'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
-import type { GlobalStandardProps } from '@deepseek-ai/dsh-client-ui-slots'
+import type { PropsLocale, GlobalStandardProps } from '@deepseek-ai/dsh-client-ui-slots'
 import { LocaleRuntime } from '@deepseek-ai/dsh-client-locale/client'
 import { SlotRegistry } from '@deepseek-ai/dsh-client-ui-renderer/client'
 import { apply, inject } from '../src/client/index.ts'
 import { OfficialBrandMark, OfficialBrandName, OfficialSidebarMark } from '../src/client/Brand.tsx'
 import { SettingsLauncher } from '../src/client/SettingsLauncher.tsx'
+
+const brandT: PropsLocale<'rabb.brand'>['t'] = key => key === 'wordmarkRabb' ? 'Rabb' : 'Code'
 
 beforeEach(() => {
   const TestURL = class extends URL {}
@@ -153,7 +155,7 @@ describe('official browser-brand plugin', () => {
   })
 
   it('renders the official name independently from both requested mark sizes', () => {
-    const name = render(<OfficialBrandName />)
+    const name = render(<OfficialBrandName t={brandT} />)
     expect(name.container.firstElementChild?.className).toContain('name')
     name.unmount()
 
@@ -164,8 +166,9 @@ describe('official browser-brand plugin', () => {
   })
 
   it('uses the Rabb wordmark for the sidebar independently of the rabbit hero', () => {
-    const sidebar = render(<OfficialSidebarMark size={24} />)
-    expect(sidebar.container.querySelector('span')?.style.width).toBe('36px')
+    const sidebar = render(<OfficialSidebarMark size={24} t={brandT} />)
+    expect(sidebar.container.querySelector('span')?.textContent).toBe('Rabb')
+    expect(sidebar.container.querySelector('span')?.style.fontSize).toBe('17px')
     expect(sidebar.container.querySelector('span')?.className).toContain('sidebarMark')
     sidebar.unmount()
     const hero = render(<OfficialBrandMark size={34} />)

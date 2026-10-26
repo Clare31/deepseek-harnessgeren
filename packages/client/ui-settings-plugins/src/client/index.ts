@@ -80,6 +80,9 @@ export function apply(ctx: ClientContext): void {
     label: () => t('nav'),
     locale: NS,
     inject: sectionInjected,
-    children: { 'settings.plugins.tab': { kind: 'list', scope: 'root' } },
+    children: {
+      'settings.plugins.tab': { kind: 'list', scope: 'root' },
+      'settings.plugins.actions': { kind: 'list', scope: 'root' },
+    },
   }, PluginsSettingsSection))
 }

@@ -300,7 +300,7 @@ Run `pnpm --dir apps/desktop run package:linux:x64:github` from the repository r
 
 The GitHub build includes `app-update.yml`, Debian package identification, and a `latest-linux.yml` feed beside the artifacts. Publish the feed and the files it references together in a public, non-draft, non-prerelease GitHub Release tagged `v<version>`. A subsequent release must declare a higher stable semantic version. The initial installed package may be a prerelease, but this update source offers stable versions only. Pushing source commits alone does not create an update; this command neither uploads artifacts nor creates Releases.
 
-The existing Desktop update indicator checks the packaged repository and requests confirmation before downloading and again before installation. Debian package installation may request system authorization. Automatic checks do not install packages or stop tasks. A private repository or an unpublished feed cannot provide credential-free updates, and network failures leave the installed application in place.
+Settings → Updates provides manual checks and the current version. Automatic checks show an availability dialog once per detected version in each loaded application; Later does not download, while Confirm update enters the native download and installation flow. The Desktop update indicator checks the packaged repository and requests confirmation before downloading and again before installation. Debian package installation may request system authorization. Automatic checks do not install packages or stop tasks. A private repository or an unpublished feed cannot provide credential-free updates, and network failures leave the installed application in place.
 
 ## Updates
 

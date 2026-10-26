@@ -16,7 +16,7 @@ import { SettingsLauncher } from './SettingsLauncher.tsx'
 declare module '@deepseek-ai/dsh-client-ui-slots' {
   interface LocaleNamespaceMap {
     /** Rabb Code sidebar launcher copy. */
-    'rabb.brand': 'settings' | 'appearance' | 'description' | 'background' | 'pixel' | 'blueprint' | 'night' | 'saveError' | 'unavailable'
+    'rabb.brand': 'settings' | 'appearance' | 'description' | 'background' | 'pixel' | 'blueprint' | 'night' | 'saveError' | 'unavailable' | 'wordmarkRabb' | 'wordmarkCode'
   }
 }
 
@@ -30,8 +30,8 @@ export const inject = ['slots', 'locale', 'configForms', 'remote', 'theme']
 export function apply(ctx: ClientContext): void {
   if (process.env.DSH_CLIENT_BUILD_PROFILE !== 'official') return
   ctx.effect(() => ctx.locale.register('rabb.brand', {
-    zh: { settings: '设置', appearance: '外观设置', description: '选择左上角背景，发送按钮会同步使用相同风格', background: '左上角背景', pixel: '像素', blueprint: '蓝色 Blueprint', night: 'Night 星空', saveError: '保存失败，请重试', unavailable: '暂时无法修改外观，请检查连接后重试' },
-    en: { settings: 'Settings', appearance: 'Appearance', description: 'Choose a header background. The send button follows the same artwork.', background: 'Header background', pixel: 'Pixel', blueprint: 'Blue Blueprint', night: 'Night', saveError: 'Could not save. Try again.', unavailable: 'Appearance is unavailable. Check your connection and try again.' },
+    zh: { wordmarkRabb: 'Rabb', wordmarkCode: 'Code', settings: '设置', appearance: '外观设置', description: '选择左上角背景，发送按钮会同步使用相同风格', background: '左上角背景', pixel: '像素', blueprint: '蓝色 Blueprint', night: 'Night 星空', saveError: '保存失败，请重试', unavailable: '暂时无法修改外观，请检查连接后重试' },
+    en: { wordmarkRabb: 'Rabb', wordmarkCode: 'Code', settings: 'Settings', appearance: 'Appearance', description: 'Choose a header background. The send button follows the same artwork.', background: 'Header background', pixel: 'Pixel', blueprint: 'Blue Blueprint', night: 'Night', saveError: 'Could not save. Try again.', unavailable: 'Appearance is unavailable. Check your connection and try again.' },
   }), 'rabb.brand: dictionaries')
   const appearance = ctx.configForms.get<AppearanceSettings>(APPEARANCE_NAMESPACE)
   ctx.effect(() => {
@@ -48,6 +48,7 @@ export function apply(ctx: ClientContext): void {
       removeTokens = ctx.theme.overrideTokens('rabb.appearance', {
         '--rabb-artwork-pixel': { light: `url("${pixelUrl}")`, dark: `url("${pixelUrl}")` },
         '--rabb-header-image': { light: image, dark: image },
+        '--rabb-brand-font-family': { light: '"Rabb Brand", sans-serif', dark: '"Rabb Brand", sans-serif' },
         '--dsw-specific-composer-send-image': { light: send, dark: send },
         '--rabb-artwork-size': { light: artwork === 'pixel' ? 'cover' : 'auto 100%', dark: artwork === 'pixel' ? 'cover' : 'auto 100%' },
         '--rabb-artwork-position': { light: artwork === 'pixel' ? 'center bottom' : 'left center', dark: artwork === 'pixel' ? 'center bottom' : 'left center' },
@@ -65,8 +66,8 @@ export function apply(ctx: ClientContext): void {
   }, AppearanceSection))
   ctx.slots.inject('sidebar.brand.mark', () =>
     ctx.slots.inject('sidebar.brand.name', function* () {
-      yield ctx.slots.register({ name: 'sidebar.brand.mark' }, OfficialSidebarMark)
-      yield ctx.slots.register({ name: 'sidebar.brand.name' }, OfficialBrandName)
+      yield ctx.slots.register({ name: 'sidebar.brand.mark', locale: 'rabb.brand' }, OfficialSidebarMark)
+      yield ctx.slots.register({ name: 'sidebar.brand.name', locale: 'rabb.brand' }, OfficialBrandName)
     }))
   ctx.slots.inject('conversation.hero.brand.mark', () =>
     ctx.slots.register({ name: 'conversation.hero.brand.mark' }, OfficialBrandMark))

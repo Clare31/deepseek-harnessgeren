@@ -1623,7 +1623,7 @@ export function PluginManagerPage(props: PluginManagerPageProps): ReactNode {
                 </Tooltip>
               </div>
             </div>
-            <div className={css.toolbar} hidden={!onInstalled}>
+            <div className={css.toolbar}>
               <Tooltip label={t('refresh')} delayMs={500} focusDelayMs={500} side="bottom" portal disabled={!loaded || refreshing}>
                 <button type="button" className={css.iconButton} aria-label={t('refresh')} aria-busy={refreshing} disabled={!loaded || refreshing} onClick={props.refresh}>
                   <span className={css.iconWrap} aria-hidden="true">

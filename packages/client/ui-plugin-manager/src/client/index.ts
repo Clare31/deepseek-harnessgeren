@@ -22,6 +22,7 @@ import type {} from '@deepseek-ai/dsh-api-remotes/client'
 import type {} from '@deepseek-ai/dsh-plugin-manager/types'
 import { PluginManagerPage } from './PluginManagerPage.tsx'
 import { PluginRefreshToast, type PluginRefreshToastFace } from './PluginRefreshToast.tsx'
+import { SettingsAddPluginAction } from './SettingsAddPluginAction.tsx'
 import { PluginsPanelIcon } from './PluginsPanelIcon.tsx'
 import { configLedgerSource } from './config-ledger.ts'
 import { tabLedgerSource } from './tab-ledger.ts'
@@ -129,6 +130,15 @@ export function apply(ctx: ClientContext): void {
         'plugins.detail.section': { kind: 'list', scope: 'root' },
       },
     }, PluginManagerPage)
+    yield ctx.slots.inject('settings.plugins.actions', () => ctx.slots.register({
+      name: 'settings.plugins.actions', id: 'plugin-manager.install', locale: NS,
+      inject: () => ({ openInstall: () => {
+        ctx.layout.selectPanel(PANEL_ID)
+        instance.actions.setTab('installed')
+        instance.actions.setView({ kind: 'list' })
+        face.openInstall()
+      } }),
+    }, SettingsAddPluginAction))
     yield ctx.layout.panelInfo.subscribe(() => {
       if (ctx.layout.panelInfo.getSnapshot().activePanelId !== PANEL_ID) instance.actions.setView({ kind: 'list' })
     })

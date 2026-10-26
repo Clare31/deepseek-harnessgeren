@@ -25,13 +25,22 @@ export class DesktopUpdateSource {
   }
 
   /** Invoke one user action; subsequent clicks join the shell-owned operation. */
-  open(): void {
-    if (!this.live || this.bridge === undefined) return
+  open(): void { this.run(false) }
+
+  /** Request a fresh check without granting download or installation permission. */
+  check(): void { this.run(true) }
+
+  private run(check: boolean): void {
+    const bridge = this.bridge
+    if (!this.live || bridge === undefined) return
+    const action = check ? bridge.check : bridge.open
+    if (action === undefined) return
     const state = this.store.getSnapshot()
     if (state.opening || (state.presentation !== undefined
       && ['checking', 'downloading', 'verifying', 'installing'].includes(state.presentation.phase))) return
     this.store.set({ ...state, opening: true })
-    void this.bridge.open().catch(() => {
+    const operation = action.call(bridge)
+    void operation.catch(() => {
       if (this.live) this.store.set({ ...this.store.getSnapshot(), failed: true })
     }).finally(() => {
       if (this.live) this.store.set({ ...this.store.getSnapshot(), opening: false })

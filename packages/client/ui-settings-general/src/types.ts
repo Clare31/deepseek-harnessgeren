@@ -24,6 +24,8 @@ export interface DesktopUpdatePresentation {
 export interface DesktopUpdateBridge {
   status(): Promise<DesktopUpdatePresentation>
   open(): Promise<void>
+  /** Check through the native confirmation flow; absent in older carriers. */
+  check?(): Promise<void>
   subscribe(listener: (state: DesktopUpdatePresentation) => void): () => void
 }
 
