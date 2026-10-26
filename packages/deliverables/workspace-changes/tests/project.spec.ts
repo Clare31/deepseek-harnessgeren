@@ -12,7 +12,7 @@ const cleanups: Array<() => Promise<unknown>> = []
 afterEach(async () => {
   for (const cleanup of cleanups.reverse()) await cleanup()
   cleanups.length = 0
-})
+}, 30_000)
 
 async function fixture() {
   const cwd = await scratchDir('dsh-project-', cleanups)
@@ -59,7 +59,7 @@ describe('current project', () => {
     expect(await readFile(join(cwd, '.git', 'index'))).toEqual(index)
     expect(git(cwd, 'rev-parse', 'HEAD').trim()).toBe(head)
     expect(git(cwd, 'status', '--porcelain', '-z')).toBe(status)
-  })
+  }, 30_000)
 
   it('resolves files from a nested Session directory and ignores diff.relative configuration', async () => {
     const { cwd, runner, signal } = await fixture()

@@ -50,7 +50,7 @@ async function setup(options: {
       },
     })
   }
-  const controller = createSessionTestController(ctx, {
+  const controller = await createSessionTestController(ctx, {
     defaultModelSelection: () => ({ provider: 'fixture', model: 'fixture-model' }),
     cwd: '/workspace',
   })

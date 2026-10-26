@@ -580,6 +580,29 @@ pinSession(sessionId: SessionId): Promise<void>
 unpinSession(sessionId: SessionId): Promise<void>
 
 /**
+ * Drop every registry record of one Session whose durable log was removed:
+ * its workspace accounting slot, its archive and pin entries, and the
+ * header/path indexes those projections read. Idempotent — an id no record
+ * mentions resolves without a write.
+ *
+ * A caller owns the Session's lifecycle before this point: it stops the
+ * Session's work, disposes its Agent, and deletes the stored log. This
+ * method only forgets the registry's own bookkeeping.
+ * @param sessionId - The Session whose records are dropped.
+ * @returns resolution after durability.
+ */
+forgetSession(sessionId: SessionId): Promise<void>
+
+/**
+ * Request every provider's stop for one Session without archiving it; a
+ * failing provider is logged, never a reason to keep the Session visible.
+ * Deletion uses this after the archive gate is already in place, and archive
+ * uses it as the second half of `stopActivity`.
+ * @param sessionId - the Session whose running work is stopped.
+ */
+async stopSessionActivity(sessionId: SessionId): Promise<void>
+
+/**
  * Resolve by canonical directory path without creating or mutating a
  * workspace. A missing path rejects during `realpath`; an existing unowned
  * directory returns `undefined`.

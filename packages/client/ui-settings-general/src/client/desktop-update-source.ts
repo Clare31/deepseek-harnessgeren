@@ -33,13 +33,13 @@ export class DesktopUpdateSource {
   private run(check: boolean): void {
     const bridge = this.bridge
     if (!this.live || bridge === undefined) return
-    const action = check ? bridge.check : bridge.open
+    const action = check ? bridge.check?.bind(bridge) : bridge.open.bind(bridge)
     if (action === undefined) return
     const state = this.store.getSnapshot()
     if (state.opening || (state.presentation !== undefined
       && ['checking', 'downloading', 'verifying', 'installing'].includes(state.presentation.phase))) return
     this.store.set({ ...state, opening: true })
-    const operation = action.call(bridge)
+    const operation = action()
     void operation.catch(() => {
       if (this.live) this.store.set({ ...this.store.getSnapshot(), failed: true })
     }).finally(() => {
